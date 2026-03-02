@@ -23,6 +23,14 @@ let members = [];
 let leaderboardCache = {};
 let currentIndex = 0;
 
+// Serve React frontend
+app.use(express.static(path.join(__dirname, 'frontend/build')));
+
+// Catch-all route to serve React
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
+});
+
 // Load members from JSON
 function loadMembers() {
   try {
@@ -116,3 +124,4 @@ loadMembers();
 rotatingUpdater();
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
