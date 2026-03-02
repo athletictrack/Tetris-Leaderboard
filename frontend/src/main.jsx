@@ -80,6 +80,7 @@ function App() {
             <th>Rank</th>
             <th>Real Name</th>
             <th>Username</th>
+            <th>Letter Rank</th>
             <th>TR</th>
             <th>PPS</th>
             <th>APM</th>
@@ -103,6 +104,7 @@ function App() {
                   {m.username}
                 </a>
               </td>
+              <td>{""}</td>
               <td>{m.tr}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
