@@ -72,12 +72,12 @@ function App() {
         </label>
       </div>
 
-      <h1>UTS Tetris Club Leaderboard</h1>
+      <h1>UTS Tetris Leaderboard</h1>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--table-header-bg)" }}>
           <tr>
-            <th>Club Rank</th>
+            <th>School Rank</th>
             <th>Real Name</th>
             <th>Username</th>
             <th>Letter Rank</th>
