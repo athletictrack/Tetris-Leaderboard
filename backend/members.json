@@ -1,5 +1,14 @@
 [
-  { "realName": "Isaac Tam", "username": "apexphoenix" },
-  { "realName": "Evan Mannik", "username": "tetrismountain" },
-  { "realName": "Josh Burke", "username": "tetrusmountain" }
+  {
+    "realName": "Isaac Tam",
+    "username": "apexphoenix"
+  },
+  {
+    "realName": "Evan Mannik",
+    "username": "tetrismountain"
+  },
+  {
+    "realName": "Josh Burke",
+    "username": "tetrusmountain"
+  }
 ]

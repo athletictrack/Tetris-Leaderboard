@@ -8,20 +8,20 @@ const app = express();
 
 // ===== CONFIG =====
 const PORT = process.env.PORT || 5000;
-const MEMBERS_FILE = path.join(__dirname, "members.json");
-const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 seconds
+const MEMBERS_FILE = path.join(__dirname, "members.json"); // make sure this file exists
+const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 sec per request
 const USER_AGENT = "Mozilla/5.0";
-const FRONTEND_URL = process.env.FRONTEND_URL || "*"; // allow all origins by default
+const FRONTEND_URL = process.env.FRONTEND_URL || "*";
 // ==================
 
 // Enable CORS
 app.use(cors({ origin: FRONTEND_URL }));
 
-let members = [];
+let members = []; // stores members loaded from JSON
 let leaderboardCache = {};
 let currentIndex = 0;
 
-// Serve Vite frontend build
+// Serve frontend (Vite build)
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // Catch-all route to serve frontend
@@ -29,7 +29,7 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
-// Load members from JSON
+// -------- Load members from JSON --------
 function loadMembers() {
   try {
     const raw = fs.readFileSync(MEMBERS_FILE, "utf-8");
@@ -41,7 +41,7 @@ function loadMembers() {
   }
 }
 
-// Fetch one member's stats
+// -------- Fetch one member --------
 async function fetchOneUser(member) {
   try {
     const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
@@ -60,8 +60,8 @@ async function fetchOneUser(member) {
         apm: 0,
         vs: 0,
         rank: "-",
-        standing_world: 0,
         standing_local: 0,
+        standing_world: 0,
         updated: Date.now(),
       };
       return;
@@ -77,8 +77,8 @@ async function fetchOneUser(member) {
       apm: data.apm || 0,
       vs: data.vs || 0,
       rank: data.rank || "-",
-      standing_world: data.standing || 0,
       standing_local: data.standing_local || 0,
+      standing_world: data.standing || 0,
       updated: Date.now(),
     };
 
@@ -88,7 +88,7 @@ async function fetchOneUser(member) {
   }
 }
 
-// Rotating updater: one member at a time
+// -------- Rotating updater --------
 async function rotatingUpdater() {
   if (members.length === 0) return;
 
@@ -99,7 +99,7 @@ async function rotatingUpdater() {
   setTimeout(rotatingUpdater, REQUEST_DELAY);
 }
 
-// API endpoint
+// -------- API endpoint --------
 app.get("/api/leaderboard", (req, res) => {
   const list = Object.values(leaderboardCache);
   list.sort((a, b) => b.tr - a.tr);
@@ -112,12 +112,7 @@ app.get("/api/leaderboard", (req, res) => {
   });
 });
 
-// Optional homepage
-app.get("/status", (req, res) => {
-  res.send("UTS Tetris Club backend is running. Go to /api/leaderboard for JSON data.");
-});
-
-// ===== STARTUP =====
+// -------- Startup --------
 loadMembers();
 rotatingUpdater();
 
