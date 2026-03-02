@@ -69,7 +69,7 @@ export default function Leaderboard() {
         </label>
       </div>
 
-      <h1>UTS Tetris Club Leaderboard</h1>
+      <h1>UTS Tetris Elite Leaderboard</h1>
       <table>
         <thead>
           <tr>
