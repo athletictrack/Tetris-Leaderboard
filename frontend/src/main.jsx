@@ -39,7 +39,7 @@ function App() {
     const fetchData = async () => {
       try {
         // Make sure this points to your deployed backend or relative API
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch("https://YOUR-BACKEND-URL.onrender.com/api/leaderboard");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setMembers(data.members);
