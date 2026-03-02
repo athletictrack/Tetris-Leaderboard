@@ -8,18 +8,26 @@ const path = require("path");
 const app = express();
 
 // ===== CONFIG =====
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 const MEMBERS_FILE = path.join(__dirname, "members.json");
-const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000;
+const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 seconds between requests
 const USER_AGENT = "Mozilla/5.0";
+const FRONTEND_URL = process.env.FRONTEND_URL || "*";
 // ==================
 
-// Enable CORS for any frontend
-app.use(cors({ origin: "*" }));
+// Enable CORS
+app.use(cors({ origin: FRONTEND_URL }));
 
 let members = [];
 let leaderboardCache = {};
 let currentIndex = 0;
+
+// Serve frontend (Vite build output)
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
 
 // Load members from JSON
 function loadMembers() {
@@ -33,7 +41,7 @@ function loadMembers() {
   }
 }
 
-// Fetch one member
+// Fetch one member's stats
 async function fetchOneUser(member) {
   try {
     const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
@@ -42,35 +50,36 @@ async function fetchOneUser(member) {
       timeout: 10000,
     });
 
-    if (!response.data.success || !response.data.data) {
+    const data = response.data.data;
+
+    if (!response.data.success || !data) {
+      console.warn(`User not found or private: ${member.username}`);
       leaderboardCache[member.username] = {
         realName: member.realName,
         username: member.username,
+        clubRank: 0,
+        letterRank: "-",
         tr: 0,
         pps: 0,
         apm: 0,
         vs: 0,
-        rank: "-",
-        standing_world: 0,
         standing_local: 0,
+        standing_world: 0,
         updated: Date.now(),
       };
-      console.warn(`User not found or private: ${member.username}`);
       return;
     }
-
-    const data = response.data.data;
 
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
-      tr: data.tr || 0,
+      letterRank: data.rank || "-",             // TETR.IO letter rank
+      tr: data.tr || 0,                         // numeric TR
       pps: data.pps || 0,
       apm: data.apm || 0,
       vs: data.vs || 0,
-      rank: data.rank || "-",
-      standing_world: data.standing || 0,
-      standing_local: data.standing_local || 0,
+      standing_local: data.standing_local || 0, // Canada / regional
+      standing_world: data.standing || 0,       // global
       updated: Date.now(),
     };
 
@@ -80,11 +89,13 @@ async function fetchOneUser(member) {
   }
 }
 
-// Rotating updater
+// Rotating updater: one member at a time
 async function rotatingUpdater() {
   if (members.length === 0) return;
+
   const member = members[currentIndex];
   await fetchOneUser(member);
+
   currentIndex = (currentIndex + 1) % members.length;
   setTimeout(rotatingUpdater, REQUEST_DELAY);
 }
@@ -92,20 +103,21 @@ async function rotatingUpdater() {
 // API endpoint
 app.get("/api/leaderboard", (req, res) => {
   const list = Object.values(leaderboardCache);
+
+  // Sort by TR descending for club ranking
   list.sort((a, b) => b.tr - a.tr);
+
+  // Assign clubRank
+  list.forEach((m, i) => {
+    m.clubRank = i + 1;
+  });
+
   res.json({
     updated: Date.now(),
     totalMembers: members.length,
     cachedMembers: list.length,
     members: list,
   });
-});
-
-// ===== Serve frontend =====
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 // ===== STARTUP =====
