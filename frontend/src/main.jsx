@@ -1,7 +1,7 @@
 // frontend/src/main.jsx
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css"; // global styles
+import "./index.css"; // your global styles
 
 function App() {
   const [members, setMembers] = useState([]);
@@ -38,8 +38,7 @@ function App() {
 
     const fetchData = async () => {
       try {
-        // Make sure this points to your deployed backend or relative API
-        const res = await fetch("https://YOUR-BACKEND-URL.onrender.com/api/leaderboard");
+        const res = await fetch("/api/leaderboard");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setMembers(data.members);
@@ -59,18 +58,9 @@ function App() {
   };
 
   return (
-    <div
-      style={{
-        background: "var(--bg-color)",
-        color: "var(--text-color)",
-        minHeight: "100vh",
-        padding: "20px",
-      }}
-    >
+    <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
       {/* Dark mode toggle */}
-      <div
-        style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}
-      >
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
         <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
           <input
             type="checkbox"
@@ -87,10 +77,9 @@ function App() {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--table-header-bg)" }}>
           <tr>
-            <th>Club Rank</th>
+            <th>Rank</th>
             <th>Real Name</th>
             <th>Username</th>
-            <th>Letter Rank</th>
             <th>TR</th>
             <th>PPS</th>
             <th>APM</th>
@@ -100,14 +89,9 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {members.map((m) => (
-            <tr
-              key={m.username}
-              style={{
-                background: m.clubRank % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)",
-              }}
-            >
-              <td>{m.clubRank}</td>
+          {members.map((m, i) => (
+            <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
+              <td>{i + 1}</td>
               <td>{m.realName}</td>
               <td>
                 <a
@@ -119,7 +103,6 @@ function App() {
                   {m.username}
                 </a>
               </td>
-              <td>{m.letterRank}</td>
               <td>{m.tr}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
