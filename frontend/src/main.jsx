@@ -77,7 +77,7 @@ function App() {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--table-header-bg)" }}>
           <tr>
-            <th>Rank</th>
+            <th>Club Rank</th>
             <th>Real Name</th>
             <th>Username</th>
             <th>Letter Rank</th>
@@ -104,7 +104,7 @@ function App() {
                   {m.username}
                 </a>
               </td>
-              <td>{""}</td>
+              <td>{m.letterRank || "-"}</td>
               <td>{m.tr}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>

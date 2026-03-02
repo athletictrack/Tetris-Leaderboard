@@ -64,11 +64,12 @@ async function fetchOneUser(member) {
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
+      clubRank: data.rank || 0, 
+      letterRank: data.letterrank || "-",
       tr: data.tr || 0,
       pps: data.pps || 0,
       apm: data.apm || 0,
       vs: data.vs || 0,
-      rank: data.rank || "-",
       standing_world: data.standing || 0,
       standing_local: data.standing_local || 0,
       updated: Date.now(),
