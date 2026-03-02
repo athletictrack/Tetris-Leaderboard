@@ -1,3 +1,4 @@
+// backend/server.js
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -7,29 +8,20 @@ const path = require("path");
 const app = express();
 
 // ===== CONFIG =====
-const PORT = process.env.PORT || 5000;
-const MEMBERS_FILE = path.join(__dirname, "members.json"); // make sure this file exists
-const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 sec per request
+const PORT = process.env.PORT || 3001;
+const MEMBERS_FILE = path.join(__dirname, "members.json");
+const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000;
 const USER_AGENT = "Mozilla/5.0";
-const FRONTEND_URL = process.env.FRONTEND_URL || "*";
 // ==================
 
-// Enable CORS
-app.use(cors({ origin: FRONTEND_URL }));
+// Enable CORS for any frontend
+app.use(cors({ origin: "*" }));
 
-let members = []; // stores members loaded from JSON
+let members = [];
 let leaderboardCache = {};
 let currentIndex = 0;
 
-// Serve frontend (Vite build)
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-// Catch-all route to serve frontend
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
-
-// -------- Load members from JSON --------
+// Load members from JSON
 function loadMembers() {
   try {
     const raw = fs.readFileSync(MEMBERS_FILE, "utf-8");
@@ -41,7 +33,7 @@ function loadMembers() {
   }
 }
 
-// -------- Fetch one member --------
+// Fetch one member
 async function fetchOneUser(member) {
   try {
     const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
@@ -51,7 +43,6 @@ async function fetchOneUser(member) {
     });
 
     if (!response.data.success || !response.data.data) {
-      console.warn(`User not found or private: ${member.username}`);
       leaderboardCache[member.username] = {
         realName: member.realName,
         username: member.username,
@@ -60,10 +51,11 @@ async function fetchOneUser(member) {
         apm: 0,
         vs: 0,
         rank: "-",
-        standing_local: 0,
         standing_world: 0,
+        standing_local: 0,
         updated: Date.now(),
       };
+      console.warn(`User not found or private: ${member.username}`);
       return;
     }
 
@@ -77,8 +69,8 @@ async function fetchOneUser(member) {
       apm: data.apm || 0,
       vs: data.vs || 0,
       rank: data.rank || "-",
-      standing_local: data.standing_local || 0,
       standing_world: data.standing || 0,
+      standing_local: data.standing_local || 0,
       updated: Date.now(),
     };
 
@@ -88,22 +80,19 @@ async function fetchOneUser(member) {
   }
 }
 
-// -------- Rotating updater --------
+// Rotating updater
 async function rotatingUpdater() {
   if (members.length === 0) return;
-
   const member = members[currentIndex];
   await fetchOneUser(member);
-
   currentIndex = (currentIndex + 1) % members.length;
   setTimeout(rotatingUpdater, REQUEST_DELAY);
 }
 
-// -------- API endpoint --------
+// API endpoint
 app.get("/api/leaderboard", (req, res) => {
   const list = Object.values(leaderboardCache);
   list.sort((a, b) => b.tr - a.tr);
-
   res.json({
     updated: Date.now(),
     totalMembers: members.length,
@@ -112,7 +101,14 @@ app.get("/api/leaderboard", (req, res) => {
   });
 });
 
-// -------- Startup --------
+// ===== Serve frontend =====
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
+// ===== STARTUP =====
 loadMembers();
 rotatingUpdater();
 

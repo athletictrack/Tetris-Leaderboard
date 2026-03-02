@@ -38,7 +38,7 @@ function App() {
 
     const fetchData = async () => {
       try {
-        const res = await fetch(import.meta.env.VITE_API_URL + "/api/leaderboard");
+        const res = await fetch("/api/leaderboard");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setMembers(data.members);
