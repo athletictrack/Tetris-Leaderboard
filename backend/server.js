@@ -1,5 +1,3 @@
-// server.js
-
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -9,11 +7,11 @@ const path = require("path");
 const app = express();
 
 // ===== CONFIG =====
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 const MEMBERS_FILE = path.join(__dirname, "members.json");
-const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 seconds between API requests
+const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000; // 2 seconds
 const USER_AGENT = "Mozilla/5.0";
-const FRONTEND_URL = process.env.FRONTEND_URL || "*";
+const FRONTEND_URL = process.env.FRONTEND_URL || "*"; // allow all origins by default
 // ==================
 
 // Enable CORS
@@ -23,12 +21,12 @@ let members = [];
 let leaderboardCache = {};
 let currentIndex = 0;
 
-// Serve React frontend
-app.use(express.static(path.join(__dirname, 'frontend/build')));
+// Serve Vite frontend build
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Catch-all route to serve React
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
+// Catch-all route to serve frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 // Load members from JSON
@@ -115,7 +113,7 @@ app.get("/api/leaderboard", (req, res) => {
 });
 
 // Optional homepage
-app.get("/", (req, res) => {
+app.get("/status", (req, res) => {
   res.send("UTS Tetris Club backend is running. Go to /api/leaderboard for JSON data.");
 });
 
@@ -123,5 +121,4 @@ app.get("/", (req, res) => {
 loadMembers();
 rotatingUpdater();
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
