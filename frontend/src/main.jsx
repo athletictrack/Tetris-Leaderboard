@@ -1,13 +1,46 @@
 // frontend/src/main.jsx
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css"; // your global styles
+import "./index.css";
 
+// --- Rank images mapping ---
+const RANK_IMAGE_MAP = {
+  d: "/ranks/d.png",
+  dplus: "/ranks/dplus.png",
+  cminus: "/ranks/cminus.png",
+  c: "/ranks/c.png",
+  cplus: "/ranks/cplus.png",
+  bminus: "/ranks/bminus.png",
+  b: "/ranks/b.png",
+  bplus: "/ranks/bplus.png",
+  aminus: "/ranks/aminus.png",
+  a: "/ranks/a.png",
+  aplus: "/ranks/aplus.png",
+  sminus: "/ranks/sminus.png",
+  s: "/ranks/s.png",
+  splus: "/ranks/splus.png",
+  ss: "/ranks/ss.png",
+  u: "/ranks/u.png",
+  x: "/ranks/x.png",
+  xplus: "/ranks/xplus.png",
+  z: "/ranks/z.png",
+  unranked: "/ranks/placeholder.png"
+};
+
+const DEFAULT_RANK_IMAGE = "/ranks/placeholder.png";
+
+// Convert rank text to mapping key and return image path
+function getRankImage(rank) {
+  if (!rank) return DEFAULT_RANK_IMAGE;
+  const key = rank.toLowerCase().replace(/\+/g, "plus").replace(/-/g, "minus");
+  return RANK_IMAGE_MAP[key] || DEFAULT_RANK_IMAGE;
+}
+
+// --- App Component ---
 function App() {
   const [members, setMembers] = useState([]);
-  const [darkMode, setDarkMode] = useState(true); // start dark
+  const [darkMode, setDarkMode] = useState(true);
 
-  // Apply dark mode styles
   const applyMode = (dark) => {
     const root = document.documentElement;
     if (dark) {
@@ -59,15 +92,9 @@ function App() {
 
   return (
     <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
-      {/* Dark mode toggle */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
         <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={darkMode}
-            onChange={toggleDarkMode}
-            style={{ marginRight: "8px" }}
-          />
+          <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} style={{ marginRight: "8px" }} />
           {darkMode ? "Dark Mode" : "Light Mode"}
         </label>
       </div>
@@ -104,7 +131,14 @@ function App() {
                   {m.username}
                 </a>
               </td>
-              <td>{m.letterRank || "-"}</td>
+              <td>
+                <img
+                  src={getRankImage(m.letterRank)}
+                  alt={m.letterRank || "Unranked"}
+                  height="32"
+                  style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
+                />
+              </td>
               <td>{m.tr}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
