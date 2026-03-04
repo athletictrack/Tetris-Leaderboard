@@ -29,17 +29,16 @@ const RANK_IMAGE_MAP = {
 
 const DEFAULT_RANK_IMAGE = "/ranks/placeholder.png";
 
-// Convert rank text to mapping key and return image path
 function getRankImage(rank) {
   if (!rank) return DEFAULT_RANK_IMAGE;
   const key = rank.toLowerCase().replace(/\+/g, "plus").replace(/-/g, "minus");
   return RANK_IMAGE_MAP[key] || DEFAULT_RANK_IMAGE;
 }
 
-// --- App Component ---
 function App() {
   const [members, setMembers] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const applyMode = (dark) => {
     const root = document.documentElement;
@@ -81,7 +80,7 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 1000); // refresh every 10s
+    const interval = setInterval(fetchData, 10000); // refresh interval
     return () => clearInterval(interval);
   }, [darkMode]);
 
@@ -89,6 +88,12 @@ function App() {
     setDarkMode((prev) => !prev);
     applyMode(!darkMode);
   };
+
+  // --- Filtered members ---
+  const filteredMembers = members.filter((m) =>
+    m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.realName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
@@ -100,6 +105,25 @@ function App() {
       </div>
 
       <h1>UTS Tetris Elite Leaderboard</h1>
+
+      {/* Search Bar */}
+      <div style={{ marginBottom: "15px" }}>
+        <input
+          type="text"
+          placeholder="Search by username or real name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "8px",
+            width: "100%",
+            maxWidth: "300px",
+            borderRadius: "6px",
+            border: "1px solid var(--table-border)",
+            background: "var(--table-row-even)",
+            color: "var(--text-color)"
+          }}
+        />
+      </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--table-header-bg)" }}>
@@ -117,36 +141,39 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {members.map((m, i) => (
-            <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
-              <td>{i + 1}</td>
-              <td>{m.realName}</td>
-              <td>
-                <a
-                  href={`https://ch.tetr.io/u/${m.username}/league`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "var(--link-color)" }}
-                >
-                  {m.username}
-                </a>
-              </td>
-              <td>
-                <img
-                  src={getRankImage(m.letterRank)}
-                  alt={m.letterRank || "Unranked"}
-                  height="32"
-                  style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
-                />
-              </td>
-              <td>{m.tr}</td>
-              <td>{m.pps}</td>
-              <td>{m.apm}</td>
-              <td>{m.vs}</td>
-              <td>{m.standing_local}</td>
-              <td>{m.standing_world}</td>
-            </tr>
-          ))}
+          {filteredMembers.map((m, i) => {
+            const trueRank = members.findIndex(x => x.username === m.username) + 1;
+            return (
+              <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
+                <td>{trueRank}</td>
+                <td>{m.realName}</td>
+                <td>
+                  <a
+                    href={`https://ch.tetr.io/u/${m.username}/league`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--link-color)" }}
+                  >
+                    {m.username}
+                  </a>
+                </td>
+                <td>
+                  <img
+                    src={getRankImage(m.letterRank)}
+                    alt={m.letterRank || "Unranked"}
+                    height="32"
+                    style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
+                  />
+                </td>
+                <td>{m.tr}</td>
+                <td>{m.pps}</td>
+                <td>{m.apm}</td>
+                <td>{m.vs}</td>
+                <td>{m.standing_local}</td>
+                <td>{m.standing_world}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -159,7 +186,6 @@ function App() {
   );
 }
 
-// Render app
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
