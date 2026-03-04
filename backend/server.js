@@ -10,7 +10,7 @@ const app = express();
 // ===== CONFIG =====
 const PORT = process.env.PORT || 3001;
 const MEMBERS_FILE = path.join(__dirname, "members.json");
-const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 2000;
+const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 1000;
 const USER_AGENT = "Mozilla/5.0";
 // ==================
 

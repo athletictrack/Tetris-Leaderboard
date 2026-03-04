@@ -81,7 +81,7 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // refresh every 10s
+    const interval = setInterval(fetchData, 1000); // refresh every 10s
     return () => clearInterval(interval);
   }, [darkMode]);
 
