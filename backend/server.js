@@ -14,7 +14,7 @@ const REQUEST_DELAY = parseInt(process.env.REQUEST_DELAY_MS) || 1000;
 const USER_AGENT = "Mozilla/5.0";
 // ==================
 
-// Enable CORS for any frontend
+// Enable CORS for frontend
 app.use(cors({ origin: "*" }));
 
 let members = [];
@@ -33,54 +33,63 @@ function loadMembers() {
   }
 }
 
-// Fetch one member
+// Fetch stats for one user
 async function fetchOneUser(member) {
   try {
-    const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
-    const response = await axios.get(url, {
-      headers: { "User-Agent": USER_AGENT },
-      timeout: 10000,
-    });
+    const baseUrl = `https://ch.tetr.io/api/users/${member.username}`;
+    
+    // Fetch all modes in parallel
+    const [leagueResp, blitzResp, fortyResp, zenithResp] = await Promise.all([
+      axios.get(`${baseUrl}/summaries/league`, { headers: { "User-Agent": USER_AGENT }, timeout: 10000 }),
+      axios.get(`${baseUrl}/summaries/blitz`, { headers: { "User-Agent": USER_AGENT }, timeout: 10000 }),
+      axios.get(`${baseUrl}/summaries/40l`, { headers: { "User-Agent": USER_AGENT }, timeout: 10000 }),
+      axios.get(`${baseUrl}/summaries/zenith`, { headers: { "User-Agent": USER_AGENT }, timeout: 10000 }),
+    ]);
 
-    if (!response.data.success || !response.data.data) {
-      leaderboardCache[member.username] = {
-        realName: member.realName,
-        username: member.username,
-        tr: 0,
-        pps: 0,
-        apm: 0,
-        vs: 0,
-        rank: "-",
-        standing_world: 0,
-        standing_local: 0,
-        updated: Date.now(),
-      };
-      console.warn(`User not found or private: ${member.username}`);
-      return;
-    }
-
-    const data = response.data.data;
+    const fallback = { tr: 0, pps: 0, apm: 0, vs: 0, letterRank: "-" };
 
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
-      letterRank: data.rank || "-",   // letter rank from API (S, S+, etc.)
-      tr: data.tr || 0,               // rating used for ordering club leaderboard
-      pps: data.pps || 0,
-      apm: data.apm || 0,
-      vs: data.vs || 0,
-      standing_world: data.standing || 0,      // global numeric rank
-      standing_local: data.standing_local || 0,// country numeric rank
+      // Tetra League
+      tr: leagueResp.data.data?.tr || fallback.tr,
+      pps: leagueResp.data.data?.pps || fallback.pps,
+      apm: leagueResp.data.data?.apm || fallback.apm,
+      vs: leagueResp.data.data?.vs || fallback.vs,
+      letterRank: leagueResp.data.data?.rank || fallback.letterRank,
+      // Other modes
+      blitz: blitzResp.data.data?.tr || 0,
+      fortyLines: fortyResp.data.data?.tr || 0,
+      zenith: zenithResp.data.data?.tr || 0,
+      // Standings (from Tetra League)
+      standing_world: leagueResp.data.data?.standing || 0,
+      standing_local: leagueResp.data.data?.standing_local || 0,
       updated: Date.now(),
     };
 
     console.log(`Updated ${member.username}`);
   } catch (err) {
-    console.log(`Error updating ${member.username}: ${err.response?.status || err.message}`);
+    console.warn(`Error updating ${member.username}: ${err.response?.status || err.message}`);
+    // Keep member in cache with zeroed stats
+    leaderboardCache[member.username] = {
+      realName: member.realName,
+      username: member.username,
+      tr: 0,
+      blitz: 0,
+      fortyLines: 0,
+      zenith: 0,
+      pps: 0,
+      apm: 0,
+      vs: 0,
+      letterRank: "-",
+      standing_world: 0,
+      standing_local: 0,
+      updated: Date.now(),
+    };
   }
 }
 
-// Rotating updater
+// Rotating updater (keeps API calls rate-limited)
 async function rotatingUpdater() {
   if (members.length === 0) return;
   const member = members[currentIndex];
@@ -92,7 +101,7 @@ async function rotatingUpdater() {
 // API endpoint
 app.get("/api/leaderboard", (req, res) => {
   const list = Object.values(leaderboardCache);
-  // Sort by TR descending
+  // Sort by Tetra League TR by default
   list.sort((a, b) => b.tr - a.tr);
   // Assign clubRank
   list.forEach((member, index) => {
@@ -107,14 +116,14 @@ app.get("/api/leaderboard", (req, res) => {
   });
 });
 
-// ===== Serve frontend =====
+// Serve frontend
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
-// ===== STARTUP =====
+// Startup
 loadMembers();
 rotatingUpdater();
 

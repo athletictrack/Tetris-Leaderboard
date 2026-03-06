@@ -39,6 +39,14 @@ function App() {
   const [members, setMembers] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMode, setSelectedMode] = useState("tr"); // default: Tetra League
+
+  const MODES = [
+    { label: "Tetra League", field: "tr" },
+    { label: "Blitz", field: "blitz" },
+    { label: "40 Lines", field: "fortyLines" },
+    { label: "Zenith Tower", field: "zenith" }
+  ];
 
   const applyMode = (dark) => {
     const root = document.documentElement;
@@ -80,7 +88,7 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // refresh interval
+    const interval = setInterval(fetchData, 10000); // refresh every 10s
     return () => clearInterval(interval);
   }, [darkMode]);
 
@@ -89,10 +97,15 @@ function App() {
     applyMode(!darkMode);
   };
 
-  // --- Filtered members ---
+  // Filtered members
   const filteredMembers = members.filter((m) =>
     m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.realName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Sort members by selected mode
+  const sortedMembers = [...filteredMembers].sort(
+    (a, b) => (b[selectedMode] || 0) - (a[selectedMode] || 0)
   );
 
   return (
@@ -125,6 +138,27 @@ function App() {
         />
       </div>
 
+      {/* Mode Selector */}
+      <div style={{ marginBottom: "15px" }}>
+        {MODES.map((mode) => (
+          <button
+            key={mode.field}
+            onClick={() => setSelectedMode(mode.field)}
+            style={{
+              padding: "6px 12px",
+              marginRight: "6px",
+              background: selectedMode === mode.field ? "#4ea3ff" : "#1f1f1f",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer"
+            }}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead style={{ background: "var(--table-header-bg)" }}>
           <tr>
@@ -141,8 +175,8 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {filteredMembers.map((m, i) => {
-            const trueRank = members.findIndex(x => x.username === m.username) + 1;
+          {sortedMembers.map((m, i) => {
+            const trueRank = i + 1; // rank based on selected mode
             return (
               <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
                 <td>{trueRank}</td>
