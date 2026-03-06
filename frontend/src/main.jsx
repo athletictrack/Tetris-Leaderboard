@@ -3,51 +3,38 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
-// --- Rank images mapping ---
+// Rank images
 const RANK_IMAGE_MAP = {
-  d: "/ranks/d.png",
-  dplus: "/ranks/dplus.png",
-  cminus: "/ranks/cminus.png",
-  c: "/ranks/c.png",
-  cplus: "/ranks/cplus.png",
-  bminus: "/ranks/bminus.png",
-  b: "/ranks/b.png",
-  bplus: "/ranks/bplus.png",
-  aminus: "/ranks/aminus.png",
-  a: "/ranks/a.png",
-  aplus: "/ranks/aplus.png",
-  sminus: "/ranks/sminus.png",
-  s: "/ranks/s.png",
-  splus: "/ranks/splus.png",
-  ss: "/ranks/ss.png",
-  u: "/ranks/u.png",
-  x: "/ranks/x.png",
-  xplus: "/ranks/xplus.png",
-  z: "/ranks/z.png",
-  unranked: "/ranks/placeholder.png"
+  d: "/ranks/d.png", dplus: "/ranks/dplus.png", cminus: "/ranks/cminus.png",
+  c: "/ranks/c.png", cplus: "/ranks/cplus.png", bminus: "/ranks/bminus.png",
+  b: "/ranks/b.png", bplus: "/ranks/bplus.png", aminus: "/ranks/aminus.png",
+  a: "/ranks/a.png", aplus: "/ranks/aplus.png", sminus: "/ranks/sminus.png",
+  s: "/ranks/s.png", splus: "/ranks/splus.png", ss: "/ranks/ss.png",
+  u: "/ranks/u.png", x: "/ranks/x.png", xplus: "/ranks/xplus.png",
+  z: "/ranks/z.png", unranked: "/ranks/placeholder.png"
 };
-
 const DEFAULT_RANK_IMAGE = "/ranks/placeholder.png";
-
 function getRankImage(rank) {
   if (!rank) return DEFAULT_RANK_IMAGE;
   const key = rank.toLowerCase().replace(/\+/g, "plus").replace(/-/g, "minus");
   return RANK_IMAGE_MAP[key] || DEFAULT_RANK_IMAGE;
 }
 
+// Header label for modes
+const MODE_HEADER_LABEL = {
+  tr: "TR",
+  blitz: "Blitz Rating",
+  fortyLines: "40L Rating",
+  zenith: "Zenith Rating"
+};
+
 function App() {
   const [members, setMembers] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMode, setSelectedMode] = useState("tr"); // default: Tetra League
+  const [selectedMode, setSelectedMode] = useState("tr");
 
-  const MODES = [
-    { label: "Tetra League", field: "tr" },
-    { label: "Blitz", field: "blitz" },
-    { label: "40 Lines", field: "fortyLines" },
-    { label: "Zenith Tower", field: "zenith" }
-  ];
-
+  // Apply dark/light mode
   const applyMode = (dark) => {
     const root = document.documentElement;
     if (dark) {
@@ -88,25 +75,22 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // refresh every 10s
+    const interval = setInterval(fetchData, 5000); // faster refresh for last updated
     return () => clearInterval(interval);
   }, [darkMode]);
 
   const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
+    setDarkMode(prev => !prev);
     applyMode(!darkMode);
   };
 
-  // Filtered members
-  const filteredMembers = members.filter((m) =>
+  const filteredMembers = members.filter(m =>
     m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.realName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort members by selected mode
-  const sortedMembers = [...filteredMembers].sort(
-    (a, b) => (b[selectedMode] || 0) - (a[selectedMode] || 0)
-  );
+  // last updated timestamp
+  const lastUpdated = members.length > 0 ? Math.max(...members.map(m => m.updated)) : Date.now();
 
   return (
     <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
@@ -119,42 +103,35 @@ function App() {
 
       <h1>UTS Tetris Elite Leaderboard</h1>
 
-      {/* Search Bar */}
       <div style={{ marginBottom: "15px" }}>
         <input
           type="text"
           placeholder="Search by username or real name..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           style={{
-            padding: "8px",
-            width: "100%",
-            maxWidth: "300px",
-            borderRadius: "6px",
-            border: "1px solid var(--table-border)",
-            background: "var(--table-row-even)",
-            color: "var(--text-color)"
+            padding: "8px", width: "100%", maxWidth: "300px", borderRadius: "6px",
+            border: "1px solid var(--table-border)", background: "var(--table-row-even)", color: "var(--text-color)"
           }}
         />
       </div>
 
-      {/* Mode Selector */}
-      <div style={{ marginBottom: "15px" }}>
-        {MODES.map((mode) => (
+      {/* Mode buttons */}
+      <div style={{ marginBottom: "15px", display: "flex", gap: "8px" }}>
+        {Object.keys(MODE_HEADER_LABEL).map(mode => (
           <button
-            key={mode.field}
-            onClick={() => setSelectedMode(mode.field)}
+            key={mode}
+            onClick={() => setSelectedMode(mode)}
             style={{
               padding: "6px 12px",
-              marginRight: "6px",
-              background: selectedMode === mode.field ? "#4ea3ff" : "#1f1f1f",
-              color: "#fff",
+              backgroundColor: selectedMode === mode ? "#4ea3ff" : "var(--table-header-bg)",
+              color: selectedMode === mode ? "#fff" : "var(--text-color)",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer"
             }}
           >
-            {mode.label}
+            {MODE_HEADER_LABEL[mode]}
           </button>
         ))}
       </div>
@@ -166,7 +143,7 @@ function App() {
             <th>Real Name</th>
             <th>Username</th>
             <th>Letter Rank</th>
-            <th>TR</th>
+            <th>{MODE_HEADER_LABEL[selectedMode]}</th>
             <th>PPS</th>
             <th>APM</th>
             <th>VS</th>
@@ -175,31 +152,21 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {sortedMembers.map((m, i) => {
-            const trueRank = i + 1; // rank based on selected mode
+          {filteredMembers.map((m, i) => {
+            const trueRank = members.findIndex(x => x.username === m.username) + 1;
             return (
               <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
                 <td>{trueRank}</td>
                 <td>{m.realName}</td>
                 <td>
-                  <a
-                    href={`https://ch.tetr.io/u/${m.username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "var(--link-color)" }}
-                  >
+                  <a href={`https://ch.tetr.io/u/${m.username}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--link-color)" }}>
                     {m.username}
                   </a>
                 </td>
                 <td>
-                  <img
-                    src={getRankImage(m.letterRank)}
-                    alt={m.letterRank || "Unranked"}
-                    height="32"
-                    style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
-                  />
+                  <img src={getRankImage(m.letterRank)} alt={m.letterRank || "Unranked"} height="32" style={{ display: "block", margin: "0 auto", objectFit: "contain" }} />
                 </td>
-                <td>{m.tr}</td>
+                <td>{m[selectedMode]}</td>
                 <td>{m.pps}</td>
                 <td>{m.apm}</td>
                 <td>{m.vs}</td>
@@ -213,7 +180,7 @@ function App() {
 
       {members.length > 0 && (
         <footer style={{ marginTop: "20px", color: "var(--footer-color)" }}>
-          Last updated: {new Date(members[0].updated).toLocaleTimeString()}
+          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
         </footer>
       )}
     </div>
@@ -221,7 +188,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <React.StrictMode><App /></React.StrictMode>
 );
