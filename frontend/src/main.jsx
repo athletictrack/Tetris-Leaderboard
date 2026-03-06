@@ -149,7 +149,7 @@ function App() {
                 <td>{m.realName}</td>
                 <td>
                   <a
-                    href={`https://ch.tetr.io/u/${m.username}/league`}
+                    href={`https://ch.tetr.io/u/${m.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: "var(--link-color)" }}
