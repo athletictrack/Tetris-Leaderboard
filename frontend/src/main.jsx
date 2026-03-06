@@ -3,38 +3,43 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
-// Rank images
+// --- Rank images mapping ---
 const RANK_IMAGE_MAP = {
-  d: "/ranks/d.png", dplus: "/ranks/dplus.png", cminus: "/ranks/cminus.png",
-  c: "/ranks/c.png", cplus: "/ranks/cplus.png", bminus: "/ranks/bminus.png",
-  b: "/ranks/b.png", bplus: "/ranks/bplus.png", aminus: "/ranks/aminus.png",
-  a: "/ranks/a.png", aplus: "/ranks/aplus.png", sminus: "/ranks/sminus.png",
-  s: "/ranks/s.png", splus: "/ranks/splus.png", ss: "/ranks/ss.png",
-  u: "/ranks/u.png", x: "/ranks/x.png", xplus: "/ranks/xplus.png",
-  z: "/ranks/z.png", unranked: "/ranks/placeholder.png"
+  d: "/ranks/d.png",
+  dplus: "/ranks/dplus.png",
+  cminus: "/ranks/cminus.png",
+  c: "/ranks/c.png",
+  cplus: "/ranks/cplus.png",
+  bminus: "/ranks/bminus.png",
+  b: "/ranks/b.png",
+  bplus: "/ranks/bplus.png",
+  aminus: "/ranks/aminus.png",
+  a: "/ranks/a.png",
+  aplus: "/ranks/aplus.png",
+  sminus: "/ranks/sminus.png",
+  s: "/ranks/s.png",
+  splus: "/ranks/splus.png",
+  ss: "/ranks/ss.png",
+  u: "/ranks/u.png",
+  x: "/ranks/x.png",
+  xplus: "/ranks/xplus.png",
+  z: "/ranks/z.png",
+  unranked: "/ranks/placeholder.png"
 };
+
 const DEFAULT_RANK_IMAGE = "/ranks/placeholder.png";
+
 function getRankImage(rank) {
   if (!rank) return DEFAULT_RANK_IMAGE;
   const key = rank.toLowerCase().replace(/\+/g, "plus").replace(/-/g, "minus");
   return RANK_IMAGE_MAP[key] || DEFAULT_RANK_IMAGE;
 }
 
-// Header label for modes
-const MODE_HEADER_LABEL = {
-  tr: "TR",
-  blitz: "Blitz Rating",
-  fortyLines: "40L Rating",
-  zenith: "Zenith Rating"
-};
-
 function App() {
   const [members, setMembers] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMode, setSelectedMode] = useState("tr");
 
-  // Apply dark/light mode
   const applyMode = (dark) => {
     const root = document.documentElement;
     if (dark) {
@@ -75,22 +80,20 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 5000); // faster refresh for last updated
+    const interval = setInterval(fetchData, 10000); // refresh interval
     return () => clearInterval(interval);
   }, [darkMode]);
 
   const toggleDarkMode = () => {
-    setDarkMode(prev => !prev);
+    setDarkMode((prev) => !prev);
     applyMode(!darkMode);
   };
 
-  const filteredMembers = members.filter(m =>
+  // --- Filtered members ---
+  const filteredMembers = members.filter((m) =>
     m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.realName.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // last updated timestamp
-  const lastUpdated = members.length > 0 ? Math.max(...members.map(m => m.updated)) : Date.now();
 
   return (
     <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
@@ -103,37 +106,23 @@ function App() {
 
       <h1>UTS Tetris Elite Leaderboard</h1>
 
+      {/* Search Bar */}
       <div style={{ marginBottom: "15px" }}>
         <input
           type="text"
           placeholder="Search by username or real name..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           style={{
-            padding: "8px", width: "100%", maxWidth: "300px", borderRadius: "6px",
-            border: "1px solid var(--table-border)", background: "var(--table-row-even)", color: "var(--text-color)"
+            padding: "8px",
+            width: "100%",
+            maxWidth: "300px",
+            borderRadius: "6px",
+            border: "1px solid var(--table-border)",
+            background: "var(--table-row-even)",
+            color: "var(--text-color)"
           }}
         />
-      </div>
-
-      {/* Mode buttons */}
-      <div style={{ marginBottom: "15px", display: "flex", gap: "8px" }}>
-        {Object.keys(MODE_HEADER_LABEL).map(mode => (
-          <button
-            key={mode}
-            onClick={() => setSelectedMode(mode)}
-            style={{
-              padding: "6px 12px",
-              backgroundColor: selectedMode === mode ? "#4ea3ff" : "var(--table-header-bg)",
-              color: selectedMode === mode ? "#fff" : "var(--text-color)",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            {MODE_HEADER_LABEL[mode]}
-          </button>
-        ))}
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -143,7 +132,7 @@ function App() {
             <th>Real Name</th>
             <th>Username</th>
             <th>Letter Rank</th>
-            <th>{MODE_HEADER_LABEL[selectedMode]}</th>
+            <th>TR</th>
             <th>PPS</th>
             <th>APM</th>
             <th>VS</th>
@@ -159,14 +148,24 @@ function App() {
                 <td>{trueRank}</td>
                 <td>{m.realName}</td>
                 <td>
-                  <a href={`https://ch.tetr.io/u/${m.username}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--link-color)" }}>
+                  <a
+                    href={`https://ch.tetr.io/u/${m.username}/league`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--link-color)" }}
+                  >
                     {m.username}
                   </a>
                 </td>
                 <td>
-                  <img src={getRankImage(m.letterRank)} alt={m.letterRank || "Unranked"} height="32" style={{ display: "block", margin: "0 auto", objectFit: "contain" }} />
+                  <img
+                    src={getRankImage(m.letterRank)}
+                    alt={m.letterRank || "Unranked"}
+                    height="32"
+                    style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
+                  />
                 </td>
-                <td>{m[selectedMode]}</td>
+                <td>{m.tr}</td>
                 <td>{m.pps}</td>
                 <td>{m.apm}</td>
                 <td>{m.vs}</td>
@@ -180,7 +179,7 @@ function App() {
 
       {members.length > 0 && (
         <footer style={{ marginTop: "20px", color: "var(--footer-color)" }}>
-          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+          Last updated: {new Date(members[0].updated).toLocaleTimeString()}
         </footer>
       )}
     </div>
@@ -188,5 +187,7 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode><App /></React.StrictMode>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
