@@ -39,7 +39,7 @@ async function fetchOneUser(member) {
     const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
     const response = await axios.get(url, {
       headers: { "User-Agent": USER_AGENT },
-      timeout: 1000,
+      timeout: 10000,
     });
 
     if (!response.data.success || !response.data.data) {
