@@ -131,6 +131,7 @@ function App() {
             <th>Club Rank</th>
             <th>Real Name</th>
             <th>Username</th>
+            <th>Grade</th>
             <th>Letter Rank</th>
             <th>TR</th>
             <th>PPS</th>
@@ -157,6 +158,7 @@ function App() {
                     {m.username}
                   </a>
                 </td>
+                <td>{m.grade || "-"}</td>
                 <td>
                   <img
                     src={getRankImage(m.letterRank)}

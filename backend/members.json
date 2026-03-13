@@ -1,66 +1,82 @@
 [
   {
     "realName": "Evan Mannik",
-    "username": "tetrismountain"
+    "username": "tetrismountain",
+    "grade": "M3"
   },
   {
     "realName": "Josh Burke",
-    "username": "tetrusmountain"
+    "username": "tetrusmountain",
+    "grade": "M3"
   },
   {
     "realName": "Perry Wu",
-    "username": "not_bob"
+    "username": "not_bob",
+    "grade": "M3"
   },
   {
     "realName": "Peyton Duan-Tan",
-    "username": "peytonrexx1"
+    "username": "peytonrexx1",
+    "grade": "M3"
   },
   {
     "realName": "Shawn Joneja",
-    "username": "tetraplatypus"
+    "username": "tetraplatypus",
+    "grade": "M3"
   },
   {
     "realName": "Lucas Cescon",
-    "username": "caloriekirk"
+    "username": "caloriekirk",
+    "grade": "M3"
   },
   {
     "realName": "Nathan Chau",
-    "username": "peytonrexx"
+    "username": "peytonrexx",
+    "grade": "M3"
   },
   {
     "realName": "William Wu",
-    "username": "revl"
+    "username": "revl",
+    "grade": "M3"
   },
   {
     "realName": "James Coleman",
-    "username": "pumpkinpoet"
+    "username": "pumpkinpoet",
+    "grade": "M3"
   },
   {
     "realName": "Max Wen",
-    "username": "waxymaxy"
+    "username": "waxymaxy",
+    "grade": "M3"
   },
   {
     "realName": "Emily Mu",
-    "username": "wlnl"
+    "username": "wlnl",
+    "grade": "M3"
   },
   {
     "realName": "Damian Tang",
-    "username": "dame410"
+    "username": "dame410",
+    "grade": "M3"
   },
   {
     "realName": "April Ye",
-    "username": "lirpa1119"
+    "username": "lirpa1119",
+    "grade": "M3"
   },
   {
     "realName": "Ryan Sharma",
-    "username": "ace_spiker"
+    "username": "ace_spiker",
+    "grade": "M3"
   },
   {
     "realName": "Elsa Liu",
-    "username": "elsafrozen"
+    "username": "elsafrozen",
+    "grade": "M3"
   },
   {
     "realName": "Isaac Tam",
-    "username": "apexphoenix"
+    "username": "apexphoenix",
+    "grade": "M3"
   }
 ]
