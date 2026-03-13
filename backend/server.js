@@ -64,6 +64,7 @@ async function fetchOneUser(member) {
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
+      grade: member.grade,
       letterRank: data.rank || "-",   // letter rank from API (S, S+, etc.)
       tr: data.tr || 0,               // rating used for ordering club leaderboard
       pps: data.pps || 0,
