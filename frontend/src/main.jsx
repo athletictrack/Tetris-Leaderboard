@@ -100,7 +100,7 @@ function App() {
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
         <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
           <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} style={{ marginRight: "8px" }} />
-          {darkMode ? "Dark Mode" : "Light Mode"}
+          {darkMode ? "Dark Mode" : "Dark Mode"}
         </label>
       </div>
 

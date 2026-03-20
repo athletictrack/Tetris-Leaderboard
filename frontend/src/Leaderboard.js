@@ -65,7 +65,7 @@ export default function Leaderboard() {
             onChange={toggleDarkMode}
             style={{ marginRight: "8px" }}
           />
-          {darkMode ? "Dark Mode" : "Light Mode"}
+          {darkMode ? "Dark Mode" : "Dark Mode"}
         </label>
       </div>
 
