@@ -1,8 +1,8 @@
 import React from "react";
-import Dashboard from "./components/Dashboard"; // adjust path if needed
+import Leaderboard from "./Leaderboard";
 
 function App() {
-  return <Dashboard />;
+  return <Leaderboard />;
 }
 
 export default App;
