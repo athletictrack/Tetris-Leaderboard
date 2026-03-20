@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 export default function Leaderboard() {
   const [members, setMembers] = useState([]);
-  const [darkMode, setDarkMode] = useState(true); // start dark
+  const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState("leaderboard");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
@@ -40,7 +40,7 @@ export default function Leaderboard() {
         const res = await fetch("http://localhost:3001/api/leaderboard");
         const data = await res.json();
 
-        // Compute placeholders for ΔTR and rank change
+        // keep all stats, add placeholders for deltaTR and rankChange
         const updatedMembers = data.members.map((m, i) => ({
           ...m,
           deltaTR: m.deltaTR || 0,
@@ -106,17 +106,22 @@ export default function Leaderboard() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ backgroundColor: "var(--table-header-bg)" }}>
-                <th>Rank</th>
+                <th>Club Rank</th>
                 <th>Real Name</th>
                 <th>Username</th>
                 <th>TR</th>
                 <th>ΔTR</th>
                 <th>Rank Change</th>
+                <th>World Standing</th>
               </tr>
             </thead>
             <tbody>
               {members.map((m, i) => (
-                <tr key={m.username} style={{ cursor: "pointer" }} onClick={() => handlePlayerClick(m)}>
+                <tr
+                  key={m.username}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handlePlayerClick(m)}
+                >
                   <td>{i + 1}</td>
                   <td>{m.realName}</td>
                   <td>
@@ -134,8 +139,13 @@ export default function Leaderboard() {
                     {m.deltaTR >= 0 ? "+" : ""}{m.deltaTR}
                   </td>
                   <td>
-                    {m.rankChange > 0 ? `↑${m.rankChange}` : m.rankChange < 0 ? `↓${Math.abs(m.rankChange)}` : "-"}
+                    {m.rankChange > 0
+                      ? `↑${m.rankChange}`
+                      : m.rankChange < 0
+                      ? `↓${Math.abs(m.rankChange)}`
+                      : "-"}
                   </td>
+                  <td>{m.standing_world}</td>
                 </tr>
               ))}
             </tbody>
@@ -158,7 +168,8 @@ export default function Leaderboard() {
               <p>TR: {selectedPlayer.tr}</p>
               <p>ΔTR: {selectedPlayer.deltaTR >= 0 ? "+" : ""}{selectedPlayer.deltaTR}</p>
               <p>Rank Change: {selectedPlayer.rankChange > 0 ? `↑${selectedPlayer.rankChange}` : selectedPlayer.rankChange < 0 ? `↓${Math.abs(selectedPlayer.rankChange)}` : "-"}</p>
-              {/* Additional stats like PPS, APM, etc. can go here later */}
+              <p>World Standing: {selectedPlayer.standing_world}</p>
+              {/* other stats from backend can be added here later */}
             </div>
           ) : (
             <p>Select a player from the leaderboard to view their profile.</p>
