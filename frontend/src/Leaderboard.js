@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 
 export default function Leaderboard() {
   const [members, setMembers] = useState([]);
-  const [darkMode, setDarkMode] = useState(false); // start light so we control it immediately
+  const [darkMode, setDarkMode] = useState(true);
+  const [activeTab, setActiveTab] = useState("leaderboard"); // active tab state
 
   // Apply dark mode styles
   const applyMode = (dark) => {
@@ -31,8 +32,7 @@ export default function Leaderboard() {
   };
 
   useEffect(() => {
-    applyMode(true); // force dark mode immediately on mount
-    setDarkMode(true);
+    applyMode(darkMode);
 
     const fetchData = async () => {
       try {
@@ -47,7 +47,7 @@ export default function Leaderboard() {
     fetchData();
     const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [darkMode]);
 
   const toggleDarkMode = () => {
     applyMode(!darkMode);
@@ -55,8 +55,8 @@ export default function Leaderboard() {
   };
 
   return (
-    <div>
-      {/* Toggle button in top-right corner */}
+    <div style={{ padding: "20px", color: "var(--text-color)" }}>
+      {/* Dark Mode Toggle */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
         <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
           <input
@@ -69,48 +69,59 @@ export default function Leaderboard() {
         </label>
       </div>
 
-      <h1>UTS Tetris Elite Leaderboard</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Real Name</th>
-            <th>Username</th>
-            <th>TR</th>
-            <th>PPS</th>
-            <th>APM</th>
-            <th>VS</th>
-            <th>Local Standing</th> {/* swapped */}
-            <th>World Standing</th> {/* swapped */}
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((m, i) => (
-            <tr key={m.username}>
-              <td>{i + 1}</td>
-              <td>{m.realName}</td>
-              <td>
-                <a
-                  href={`https://ch.tetr.io/u/${m.username}/league`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {m.username}
-                </a>
-              </td>
-              <td>{m.tr}</td>
-              <td>{m.pps}</td>
-              <td>{m.apm}</td>
-              <td>{m.vs}</td>
-              <td>{m.standing_local}</td>
-              <td>{m.standing_world}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Tabs */}
+      <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
+        <button
+          onClick={() => setActiveTab("leaderboard")}
+          style={{ fontWeight: activeTab === "leaderboard" ? "bold" : "normal" }}
+        >
+          Leaderboard
+        </button>
+        {/* Add more tabs later if needed */}
+      </div>
 
-      {members.length > 0 && (
-        <footer>Last updated: {new Date(members[0].updated).toLocaleTimeString()}</footer>
+      {/* Leaderboard Table */}
+      {activeTab === "leaderboard" && (
+        <div>
+          <h1>UTS Tetris Elite Leaderboard</h1>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ backgroundColor: "var(--table-header-bg)" }}>
+                <th>Rank</th>
+                <th>Real Name</th>
+                <th>Username</th>
+                <th>TR</th>
+                <th>World Standing</th>
+              </tr>
+            </thead>
+            <tbody>
+              {members.map((m, i) => (
+                <tr key={m.username}>
+                  <td>{i + 1}</td>
+                  <td>{m.realName}</td>
+                  <td>
+                    <a
+                      href={`https://ch.tetr.io/u/${m.username}/league`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "var(--link-color)" }}
+                    >
+                      {m.username}
+                    </a>
+                  </td>
+                  <td>{m.tr}</td>
+                  <td>{m.standing_world}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {members.length > 0 && (
+            <footer style={{ marginTop: "10px" }}>
+              Last updated: {new Date(members[0].updated).toLocaleTimeString()}
+            </footer>
+          )}
+        </div>
       )}
     </div>
   );
