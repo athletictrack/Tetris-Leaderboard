@@ -119,4 +119,3 @@ app.get("*", (req, res) => {
 loadMembers();
 rotatingUpdater();
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
