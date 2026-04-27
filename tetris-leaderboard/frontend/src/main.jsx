@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import Bracket from "./Bracket.jsx";
 
 // --- Rank images mapping ---
 const RANK_IMAGE_MAP = {
@@ -80,7 +82,7 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // refresh interval
+    const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, [darkMode]);
 
@@ -89,7 +91,6 @@ function App() {
     applyMode(!darkMode);
   };
 
-  // --- Filtered members ---
   const filteredMembers = members.filter((m) =>
     m.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.realName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -97,99 +98,123 @@ function App() {
 
   return (
     <div style={{ background: "var(--bg-color)", color: "var(--text-color)", minHeight: "100vh", padding: "20px" }}>
+      
+      <nav style={{ marginBottom: "20px" }}>
+        <Link to="/" style={{ marginRight: "10px" }}>Leaderboard</Link>
+        <Link to="/bracket">Bracket</Link>
+      </nav>
+
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
         <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-          <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} style={{ marginRight: "8px" }} />
+          <input
+            type="checkbox"
+            checked={darkMode}
+            onChange={toggleDarkMode}
+            style={{ marginRight: "8px" }}
+          />
           {darkMode ? "Dark Mode" : "Light Mode"}
         </label>
       </div>
 
-      <h1>UTS Tetris Elite Leaderboard</h1>
+      <Routes>
+        {/* LEADERBOARD PAGE */}
+        <Route path="/" element={
+          <>
+            <h1>UTS Tetris Elite Leaderboard</h1>
 
-      {/* Search Bar */}
-      <div style={{ marginBottom: "15px" }}>
-        <input
-          type="text"
-          placeholder="Search by username or real name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: "8px",
-            width: "100%",
-            maxWidth: "300px",
-            borderRadius: "6px",
-            border: "1px solid var(--table-border)",
-            background: "var(--table-row-even)",
-            color: "var(--text-color)"
-          }}
-        />
-      </div>
+            <div style={{ marginBottom: "15px" }}>
+              <input
+                type="text"
+                placeholder="Search by username or real name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  padding: "8px",
+                  width: "100%",
+                  maxWidth: "300px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--table-border)",
+                  background: "var(--table-row-even)",
+                  color: "var(--text-color)"
+                }}
+              />
+            </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead style={{ background: "var(--table-header-bg)" }}>
-          <tr>
-            <th>Club Rank</th>
-            <th>Real Name</th>
-            <th>Username</th>
-            <th>Grade</th>
-            <th>Letter Rank</th>
-            <th>TR</th>
-            <th>PPS</th>
-            <th>APM</th>
-            <th>VS</th>
-            <th>Local Standing</th>
-            <th>World Standing</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredMembers.map((m, i) => {
-            const trueRank = members.findIndex(x => x.username === m.username) + 1;
-            return (
-              <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
-                <td>{trueRank}</td>
-                <td>{m.realName}</td>
-                <td>
-                  <a
-                    href={`https://ch.tetr.io/u/${m.username}/league`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "var(--link-color)" }}
-                  >
-                    {m.username}
-                  </a>
-                </td>
-                <td>{m.grade || "-"}</td>
-                <td>
-                  <img
-                    src={getRankImage(m.letterRank)}
-                    alt={m.letterRank || "Unranked"}
-                    height="32"
-                    style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
-                  />
-                </td>
-                <td>{m.tr}</td>
-                <td>{m.pps}</td>
-                <td>{m.apm}</td>
-                <td>{m.vs}</td>
-                <td>{m.standing_local}</td>
-                <td>{m.standing_world}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead style={{ background: "var(--table-header-bg)" }}>
+                <tr>
+                  <th>Club Rank</th>
+                  <th>Real Name</th>
+                  <th>Username</th>
+                  <th>Grade</th>
+                  <th>Letter Rank</th>
+                  <th>TR</th>
+                  <th>PPS</th>
+                  <th>APM</th>
+                  <th>VS</th>
+                  <th>Local Standing</th>
+                  <th>World Standing</th>
+                </tr>
+              </thead>
 
-      {members.length > 0 && (
-        <footer style={{ marginTop: "20px", color: "var(--footer-color)" }}>
-          Last updated: {new Date(members[0].updated).toLocaleTimeString()}
-        </footer>
-      )}
+              <tbody>
+                {filteredMembers.map((m, i) => {
+                  const trueRank = members.findIndex(x => x.username === m.username) + 1;
+
+                  return (
+                    <tr key={m.username} style={{ background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)" }}>
+                      <td>{trueRank}</td>
+                      <td>{m.realName}</td>
+                      <td>
+                        <a
+                          href={`https://ch.tetr.io/u/${m.username}/league`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "var(--link-color)" }}
+                        >
+                          {m.username}
+                        </a>
+                      </td>
+                      <td>{m.grade || "-"}</td>
+                      <td>
+                        <img
+                          src={getRankImage(m.letterRank)}
+                          alt={m.letterRank || "Unranked"}
+                          height="32"
+                          style={{ display: "block", margin: "0 auto", objectFit: "contain" }}
+                        />
+                      </td>
+                      <td>{m.tr}</td>
+                      <td>{m.pps}</td>
+                      <td>{m.apm}</td>
+                      <td>{m.vs}</td>
+                      <td>{m.standing_local}</td>
+                      <td>{m.standing_world}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {members.length > 0 && (
+              <footer style={{ marginTop: "20px", color: "var(--footer-color)" }}>
+                Last updated: {new Date(members[0].updated).toLocaleTimeString()}
+              </footer>
+            )}
+          </>
+        } />
+
+        {/* BRACKET PAGE */}
+        <Route path="/bracket" element={<Bracket />} />
+      </Routes>
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
