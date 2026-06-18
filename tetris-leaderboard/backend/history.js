@@ -161,6 +161,17 @@ async function persist() {
   }
 }
 
+// ----- shared helpers -----
+
+function computeMovement(oldRank, newRank) {
+  if (oldRank == null) return { dir: "new", delta: 0 };
+  const delta = oldRank - newRank;
+  return {
+    dir: delta > 0 ? "up" : delta < 0 ? "down" : "same",
+    delta: Math.abs(delta),
+  };
+}
+
 // ----- public API -----
 
 async function init() {
@@ -216,13 +227,7 @@ function hasBaseline() {
 // Movement of a player's current rank vs the start-of-week baseline.
 function getMovement(username, currentRank) {
   if (!hasBaseline()) return { dir: "new", delta: 0 };
-  const baseline = getBaselineRanks()[username];
-  if (baseline == null) return { dir: "new", delta: 0 };
-  const delta = baseline - currentRank; // positive => moved up
-  return {
-    dir: delta > 0 ? "up" : delta < 0 ? "down" : "same",
-    delta: Math.abs(delta),
-  };
+  return computeMovement(getBaselineRanks()[username], currentRank);
 }
 
 // Best (lowest-numbered) rank a player has ever held across all snapshots.
@@ -259,7 +264,7 @@ function getHighlights(list) {
 
   // Only meaningful once we have prior weeks to compare against.
   let newPeaks = [];
-  if (snapshots.length >= 2) {
+  if (hasBaseline()) {
     newPeaks = list
       .filter((m) => {
         const best = getBestRank(m.username);
@@ -278,18 +283,18 @@ function getHighlights(list) {
 
 // Recap of the most recently completed week (compare the two latest snapshots).
 function getRecap() {
-  if (snapshots.length < 2) return null;
+  if (!hasBaseline()) return null;
   const prev = snapshots[snapshots.length - 2];
   const curr = snapshots[snapshots.length - 1];
   const movers = [];
   for (const username of Object.keys(curr.ranks)) {
     if (prev.ranks[username] == null) continue;
-    const delta = prev.ranks[username] - curr.ranks[username];
+    const move = computeMovement(prev.ranks[username], curr.ranks[username]);
     movers.push({
       username,
       realName: curr.names[username] || prev.names[username] || username,
-      delta: Math.abs(delta),
-      dir: delta > 0 ? "up" : delta < 0 ? "down" : "same",
+      delta: move.delta,
+      dir: move.dir,
     });
   }
   movers.sort((a, b) => b.delta - a.delta);

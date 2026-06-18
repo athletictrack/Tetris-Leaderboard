@@ -2,6 +2,27 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Bracket from "./Bracket";
 
+/* ------------- shared UI helpers ------------- */
+
+const COLORS = { up: "#2ecc71", down: "#e74c3c" };
+
+function DirectionArrow({ dir, delta }) {
+  const up = dir === "up";
+  return (
+    <span style={{ color: up ? COLORS.up : COLORS.down, fontWeight: 600 }}>
+      {up ? "\u25B2" : "\u25BC"}{delta != null ? ` ${delta}` : ""}
+    </span>
+  );
+}
+
+const cardStyle = {
+  margin: "10px 0",
+  padding: "14px 16px",
+  border: "1px solid var(--table-border)",
+  borderRadius: "10px",
+  background: "var(--table-header-bg)",
+};
+
 /* ---------------- LEADERBOARD ---------------- */
 
 function Movement({ move }) {
@@ -31,9 +52,8 @@ function Movement({ move }) {
   return (
     <span
       title={`${up ? "Up" : "Down"} ${move.delta} since the start of the week`}
-      style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}
     >
-      {up ? "\u25B2" : "\u25BC"} {move.delta}
+      <DirectionArrow dir={move.dir} delta={move.delta} />
     </span>
   );
 }
@@ -44,15 +64,7 @@ function Recap({ recap }) {
   if (moved.length === 0) return null;
 
   return (
-    <div
-      style={{
-        margin: "10px 0 20px",
-        padding: "14px 16px",
-        border: "1px solid var(--table-border)",
-        borderRadius: "10px",
-        background: "var(--table-header-bg)"
-      }}
-    >
+    <div style={{ ...cardStyle, marginBottom: 20 }}>
       <div style={{ fontWeight: 700, marginBottom: 8 }}>
         📊 Last week's recap{" "}
         <span style={{ fontWeight: 400, color: "var(--footer-color)" }}>
@@ -60,18 +72,13 @@ function Recap({ recap }) {
         </span>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px" }}>
-        {moved.map((m) => {
-          const up = m.dir === "up";
-          return (
-            <span key={m.username}>
-              <strong>{m.realName}</strong>{" "}
-              <span style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}>
-                {up ? "\u25B2" : "\u25BC"} {m.delta}
-              </span>{" "}
-              position{m.delta === 1 ? "" : "s"} {up ? "up" : "down"}
-            </span>
-          );
-        })}
+        {moved.map((m) => (
+          <span key={m.username}>
+            <strong>{m.realName}</strong>{" "}
+            <DirectionArrow dir={m.dir} delta={m.delta} />{" "}
+            position{m.delta === 1 ? "" : "s"} {m.dir === "up" ? "up" : "down"}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -94,25 +101,19 @@ function Highlights({ highlights, since }) {
   const { climbers = [], fallers = [], newPeaks = [] } = highlights;
   if (!climbers.length && !fallers.length && !newPeaks.length) return null;
 
-  const movers = (arr, up) =>
+  const movers = (arr, dir) =>
     arr.map((m, i) => (
       <span key={m.username}>
         {i > 0 && ", "}
         <strong>{m.realName}</strong>{" "}
-        <span style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}>
-          {up ? "\u25B2" : "\u25BC"}{m.delta}
-        </span>
+        <DirectionArrow dir={dir} delta={m.delta} />
       </span>
     ));
 
   return (
     <div
       style={{
-        margin: "10px 0",
-        padding: "14px 16px",
-        border: "1px solid var(--table-border)",
-        borderRadius: "10px",
-        background: "var(--table-header-bg)",
+        ...cardStyle,
         display: "flex",
         flexDirection: "column",
         gap: 6
@@ -122,10 +123,10 @@ function Highlights({ highlights, since }) {
         ✨ {since ? `Changes since ${fmtDate(since)}` : "This week's highlights"}
       </div>
       {climbers.length > 0 && (
-        <div>🚀 <strong>Top climbers:</strong> {movers(climbers, true)}</div>
+        <div>🚀 <strong>Top climbers:</strong> {movers(climbers, "up")}</div>
       )}
       {fallers.length > 0 && (
-        <div>📉 <strong>Biggest drops:</strong> {movers(fallers, false)}</div>
+        <div>📉 <strong>Biggest drops:</strong> {movers(fallers, "down")}</div>
       )}
       {newPeaks.length > 0 && (
         <div>
