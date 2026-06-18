@@ -77,11 +77,62 @@ function Recap({ recap }) {
   );
 }
 
+function Highlights({ highlights }) {
+  if (!highlights) return null;
+  const { climbers = [], fallers = [], newPeaks = [] } = highlights;
+  if (!climbers.length && !fallers.length && !newPeaks.length) return null;
+
+  const movers = (arr, up) =>
+    arr.map((m, i) => (
+      <span key={m.username}>
+        {i > 0 && ", "}
+        <strong>{m.realName}</strong>{" "}
+        <span style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}>
+          {up ? "\u25B2" : "\u25BC"}{m.delta}
+        </span>
+      </span>
+    ));
+
+  return (
+    <div
+      style={{
+        margin: "10px 0",
+        padding: "14px 16px",
+        border: "1px solid var(--table-border)",
+        borderRadius: "10px",
+        background: "var(--table-header-bg)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6
+      }}
+    >
+      <div style={{ fontWeight: 700 }}>✨ This week's highlights</div>
+      {climbers.length > 0 && (
+        <div>🚀 <strong>Top climbers:</strong> {movers(climbers, true)}</div>
+      )}
+      {fallers.length > 0 && (
+        <div>📉 <strong>Biggest drops:</strong> {movers(fallers, false)}</div>
+      )}
+      {newPeaks.length > 0 && (
+        <div>
+          🏅 <strong>New personal best:</strong>{" "}
+          {newPeaks.map((m, i) => (
+            <span key={m.username}>
+              {i > 0 && ", "}
+              <strong>{m.realName}</strong> reached #{m.rank}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // tetr.io reports -1 (or 0 for standings) for unranked players.
-const fmtTR = (tr) => (tr == null || tr < 0 ? "Unranked" : Math.round(tr).toLocaleString());
+const fmtTR = (tr) => (tr == null || tr < 0 ? "Unranked" : tr);
 const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
 
-function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
+function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights }) {
   const normalizeRank = (rank) => {
     if (!rank) return "placeholder";
     return rank.toLowerCase().replace("+", "plus").replace("-", "minus");
@@ -96,6 +147,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
     <div>
       <h1>UTS Tetris Elite Leaderboard</h1>
 
+      <Highlights highlights={highlights} />
       <Recap recap={recap} />
 
       <input
@@ -143,7 +195,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
                     : "var(--table-row-odd)"
               }}
             >
-              <td>{i + 1}</td>
+              <td>{m.clubRank ?? i + 1}</td>
               <td><Movement move={m.move} /></td>
               <td>{m.realName}</td>
 
@@ -193,6 +245,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
 export default function App() {
   const [members, setMembers] = useState([]);
   const [recap, setRecap] = useState(null);
+  const [highlights, setHighlights] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const location = useLocation();
@@ -230,6 +283,7 @@ export default function App() {
         const data = await res.json();
         setMembers(data.members || []);
         setRecap(data.recap || null);
+        setHighlights(data.highlights || null);
       } catch (err) {
         console.error(err);
       }
@@ -316,6 +370,7 @@ export default function App() {
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               recap={recap}
+              highlights={highlights}
             />
           }
         />

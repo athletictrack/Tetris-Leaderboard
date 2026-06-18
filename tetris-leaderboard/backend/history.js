@@ -197,8 +197,17 @@ function getBaselineRanks() {
   return last ? last.ranks : {};
 }
 
+// Whether we have a genuine start-of-week baseline to compare against.
+// The very first snapshot is taken mid-week (when the feature first runs), so
+// it isn't a real week boundary; movement is only meaningful once a Sunday
+// rollover has produced a second snapshot. Until then everyone shows "new".
+function hasBaseline() {
+  return snapshots.length >= 2;
+}
+
 // Movement of a player's current rank vs the start-of-week baseline.
 function getMovement(username, currentRank) {
+  if (!hasBaseline()) return { dir: "new", delta: 0 };
   const baseline = getBaselineRanks()[username];
   if (baseline == null) return { dir: "new", delta: 0 };
   const delta = baseline - currentRank; // positive => moved up
@@ -206,6 +215,57 @@ function getMovement(username, currentRank) {
     dir: delta > 0 ? "up" : delta < 0 ? "down" : "same",
     delta: Math.abs(delta),
   };
+}
+
+// Best (lowest-numbered) rank a player has ever held across all snapshots.
+function getBestRank(username) {
+  let best = null;
+  for (const s of snapshots) {
+    const r = s.ranks[username];
+    if (r != null && (best == null || r < best)) best = r;
+  }
+  return best;
+}
+
+// Top-of-page highlights derived from the live (sorted) member list:
+// biggest climbers/drops this week and players hitting a new personal-best rank.
+function getHighlights(list) {
+  const mapMover = (m) => ({
+    username: m.username,
+    realName: m.realName,
+    delta: m.move.delta,
+    rank: m.clubRank,
+  });
+
+  const climbers = list
+    .filter((m) => m.move && m.move.dir === "up")
+    .sort((a, b) => b.move.delta - a.move.delta)
+    .slice(0, 3)
+    .map(mapMover);
+
+  const fallers = list
+    .filter((m) => m.move && m.move.dir === "down")
+    .sort((a, b) => b.move.delta - a.move.delta)
+    .slice(0, 3)
+    .map(mapMover);
+
+  // Only meaningful once we have prior weeks to compare against.
+  let newPeaks = [];
+  if (snapshots.length >= 2) {
+    newPeaks = list
+      .filter((m) => {
+        const best = getBestRank(m.username);
+        return best != null && m.clubRank < best;
+      })
+      .sort((a, b) => a.clubRank - b.clubRank)
+      .map((m) => ({
+        username: m.username,
+        realName: m.realName,
+        rank: m.clubRank,
+      }));
+  }
+
+  return { climbers, fallers, newPeaks };
 }
 
 // Recap of the most recently completed week (compare the two latest snapshots).
@@ -233,5 +293,6 @@ module.exports = {
   maybeRollover,
   getMovement,
   getRecap,
+  getHighlights,
   weekStartKey,
 };
