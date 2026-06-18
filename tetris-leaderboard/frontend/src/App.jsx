@@ -4,7 +4,84 @@ import Bracket from "./Bracket";
 
 /* ---------------- LEADERBOARD ---------------- */
 
-function Leaderboard({ members, searchTerm, setSearchTerm }) {
+function Movement({ move }) {
+  if (!move || move.dir === "new") {
+    return (
+      <span title="New this week" style={{ color: "var(--footer-color)" }}>
+        –
+      </span>
+    );
+  }
+  if (move.dir === "same") {
+    return (
+      <span
+        title="No change since the start of the week"
+        style={{
+          display: "inline-block",
+          width: 16,
+          height: 4,
+          borderRadius: 2,
+          background: "#9e9e9e",
+          verticalAlign: "middle"
+        }}
+      />
+    );
+  }
+  const up = move.dir === "up";
+  return (
+    <span
+      title={`${up ? "Up" : "Down"} ${move.delta} since the start of the week`}
+      style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}
+    >
+      {up ? "\u25B2" : "\u25BC"} {move.delta}
+    </span>
+  );
+}
+
+function Recap({ recap }) {
+  if (!recap || !recap.movers || recap.movers.length === 0) return null;
+  const moved = recap.movers.filter((m) => m.dir !== "same");
+  if (moved.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        margin: "10px 0 20px",
+        padding: "14px 16px",
+        border: "1px solid var(--table-border)",
+        borderRadius: "10px",
+        background: "var(--table-header-bg)"
+      }}
+    >
+      <div style={{ fontWeight: 700, marginBottom: 8 }}>
+        📊 Last week's recap{" "}
+        <span style={{ fontWeight: 400, color: "var(--footer-color)" }}>
+          (week of {recap.weekFrom})
+        </span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px" }}>
+        {moved.map((m) => {
+          const up = m.dir === "up";
+          return (
+            <span key={m.username}>
+              <strong>{m.realName}</strong>{" "}
+              <span style={{ color: up ? "#2ecc71" : "#e74c3c", fontWeight: 600 }}>
+                {up ? "\u25B2" : "\u25BC"} {m.delta}
+              </span>{" "}
+              position{m.delta === 1 ? "" : "s"} {up ? "up" : "down"}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// tetr.io reports -1 (or 0 for standings) for unranked players.
+const fmtTR = (tr) => (tr == null || tr < 0 ? "Unranked" : Math.round(tr).toLocaleString());
+const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
+
+function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
   const normalizeRank = (rank) => {
     if (!rank) return "placeholder";
     return rank.toLowerCase().replace("+", "plus").replace("-", "minus");
@@ -18,6 +95,8 @@ function Leaderboard({ members, searchTerm, setSearchTerm }) {
   return (
     <div>
       <h1>UTS Tetris Elite Leaderboard</h1>
+
+      <Recap recap={recap} />
 
       <input
         placeholder="Search players..."
@@ -39,6 +118,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm }) {
         <thead style={{ background: "var(--table-header-bg)" }}>
           <tr>
             <th>Rank</th>
+            <th>Move</th>
             <th>Real Name</th>
             <th>Username</th>
             <th>Grade</th>
@@ -64,6 +144,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm }) {
               }}
             >
               <td>{i + 1}</td>
+              <td><Movement move={m.move} /></td>
               <td>{m.realName}</td>
 
               <td>
@@ -93,12 +174,12 @@ function Leaderboard({ members, searchTerm, setSearchTerm }) {
                 />
               </td>
 
-              <td>{m.tr}</td>
+              <td>{fmtTR(m.tr)}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
               <td>{m.vs}</td>
-              <td>{m.standing_local}</td>
-              <td>{m.standing_world}</td>
+              <td>{fmtStanding(m.standing_local)}</td>
+              <td>{fmtStanding(m.standing_world)}</td>
             </tr>
           ))}
         </tbody>
@@ -111,6 +192,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm }) {
 
 export default function App() {
   const [members, setMembers] = useState([]);
+  const [recap, setRecap] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const location = useLocation();
@@ -147,6 +229,7 @@ export default function App() {
         const res = await fetch("/api/leaderboard");
         const data = await res.json();
         setMembers(data.members || []);
+        setRecap(data.recap || null);
       } catch (err) {
         console.error(err);
       }
@@ -232,6 +315,7 @@ export default function App() {
               members={members}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
+              recap={recap}
             />
           }
         />
