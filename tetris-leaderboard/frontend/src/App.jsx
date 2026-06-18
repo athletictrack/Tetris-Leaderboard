@@ -77,6 +77,10 @@ function Recap({ recap }) {
   );
 }
 
+// tetr.io reports -1 (or 0 for standings) for unranked players.
+const fmtTR = (tr) => (tr == null || tr < 0 ? "Unranked" : Math.round(tr).toLocaleString());
+const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
+
 function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
   const normalizeRank = (rank) => {
     if (!rank) return "placeholder";
@@ -170,12 +174,12 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap }) {
                 />
               </td>
 
-              <td>{m.tr}</td>
+              <td>{fmtTR(m.tr)}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
               <td>{m.vs}</td>
-              <td>{m.standing_local}</td>
-              <td>{m.standing_world}</td>
+              <td>{fmtStanding(m.standing_local)}</td>
+              <td>{fmtStanding(m.standing_world)}</td>
             </tr>
           ))}
         </tbody>
