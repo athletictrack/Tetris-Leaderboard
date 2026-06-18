@@ -123,6 +123,7 @@ app.get("/api/leaderboard", (req, res) => {
     cachedMembers: list.length,
     members: list,
     recap: history.getRecap(),
+    highlights: history.getHighlights(list),
   });
 });
 
