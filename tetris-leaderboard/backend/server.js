@@ -121,6 +121,16 @@ async function fetchOneUser(member) {
     const zenithExStats = zenithExRec?.results?.stats;
     const zenithExAgg = zenithExRec?.results?.aggregatestats;
 
+    const sprintInputs = sprintStats?.inputs ?? 0;
+    const sprintPieces = sprintStats?.piecesplaced ?? 0;
+    const sprintPerfect = sprintStats?.finesse?.perfectpieces ?? 0;
+    const sprintTime = sprintStats?.finaltime ?? 0;
+
+    const blitzInputs = blitzStats?.inputs ?? 0;
+    const blitzPieces = blitzStats?.piecesplaced ?? 0;
+    const blitzScore = blitzStats?.score ?? 0;
+    const blitzPerfect = blitzStats?.finesse?.perfectpieces ?? 0;
+
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
@@ -132,30 +142,40 @@ async function fetchOneUser(member) {
       vs: league.vs || 0,
       standing_world: league.standing || 0,
       standing_local: league.standing_local || 0,
-      // 40L
+      // 40L (matches TETR.IO: Finesse, KPP, KPS, Pieces, PPS, Time)
       sprint: sprintStats ? sprintStats.finaltime : null,
       sprintPPS: sprintAgg?.pps ?? null,
-      sprintPieces: sprintStats?.piecesplaced ?? null,
-      sprintFinesse: sprintStats?.finesse?.faults ?? null,
-      // Blitz
+      sprintPieces: sprintPieces || null,
+      sprintFinesseFaults: sprintStats?.finesse?.faults ?? null,
+      sprintFinessePct: sprintPieces > 0 ? (sprintPerfect / sprintPieces) * 100 : null,
+      sprintKPP: sprintPieces > 0 ? sprintInputs / sprintPieces : null,
+      sprintKPS: sprintTime > 0 ? sprintInputs / (sprintTime / 1000) : null,
+      // Blitz (matches TETR.IO: Finesse, SPP, Level, Pieces, PPS, Score)
       blitz: blitzStats ? blitzStats.score : null,
       blitzPPS: blitzAgg?.pps ?? null,
-      blitzLines: blitzStats?.lines ?? null,
+      blitzPieces: blitzPieces || null,
       blitzLevel: blitzStats?.level ?? null,
-      // Zenith (current season)
+      blitzFinesseFaults: blitzStats?.finesse?.faults ?? null,
+      blitzFinessePct: blitzPieces > 0 ? (blitzPerfect / blitzPieces) * 100 : null,
+      blitzSPP: blitzPieces > 0 ? blitzScore / blitzPieces : null,
+      // Zenith QP (matches TETR.IO: Time, KOs, Climb speed, APM, PPS, Altitude)
       zenith: zenithStats ? zenithStats.zenith.altitude : null,
       zenithPPS: zenithAgg?.pps ?? null,
       zenithAPM: zenithAgg?.apm ?? null,
-      zenithVS: zenithAgg?.vsscore ?? null,
       zenithKOs: zenithStats?.kills ?? null,
       zenithTime: zenithStats?.finaltime ?? null,
+      zenithClimbAvg: zenithStats?.zenith?.rank ?? null,
+      zenithClimbPeak: zenithStats?.zenith?.peakrank ?? null,
       // Zenith all-time best
       zenithBest: zenithBestRec ? zenithBestRec.results.stats.zenith.altitude : null,
-      // Zenith Expert (current season)
+      // Zenith Expert (matches TETR.IO: Time, KOs, Climb speed, APM, PPS, Altitude)
       zenithEx: zenithExStats ? zenithExStats.zenith.altitude : null,
       zenithExPPS: zenithExAgg?.pps ?? null,
       zenithExAPM: zenithExAgg?.apm ?? null,
-      zenithExVS: zenithExAgg?.vsscore ?? null,
+      zenithExKOs: zenithExStats?.kills ?? null,
+      zenithExTime: zenithExStats?.finaltime ?? null,
+      zenithExClimbAvg: zenithExStats?.zenith?.rank ?? null,
+      zenithExClimbPeak: zenithExStats?.zenith?.peakrank ?? null,
       // Zenith Expert all-time best
       zenithExBest: zenithExBestRec ? zenithExBestRec.results.stats.zenith.altitude : null,
       updated: Date.now(),

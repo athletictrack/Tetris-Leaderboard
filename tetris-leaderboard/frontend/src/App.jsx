@@ -204,12 +204,22 @@ const fmtTR = (m) => (isUnranked(m.letterRank) ? "Unranked" : m.tr);
 const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
 const fmtNum = (v, d = 2) => (v == null ? "\u2013" : Number(v).toFixed(d));
 const fmtInt = (v) => (v == null ? "\u2013" : v.toLocaleString());
-const fmtTime = (ms) => {
+const fmtFinesse = (faults, pct) => {
+  if (faults == null) return "\u2013";
+  const p = pct != null ? `(${pct.toFixed(2)}%)` : "";
+  return `${faults}F ${p}`;
+};
+const fmtClimb = (avg, peak) => {
+  if (avg == null) return "\u2013";
+  const p = peak != null ? ` (peak ${Math.floor(peak)})` : "";
+  return `${avg.toFixed(2)}${p}`;
+};
+const fmtTimeMM = (ms) => {
   if (ms == null) return "\u2013";
   const totalSec = ms / 1000;
   const min = Math.floor(totalSec / 60);
-  const sec = Math.floor(totalSec % 60).toString().padStart(2, "0");
-  return `${min}:${sec}`;
+  const sec = (totalSec % 60).toFixed(3);
+  return `${min}:${sec.padStart(6, "0")}`;
 };
 
 const SORT_MODES = [
@@ -235,41 +245,47 @@ const MODE_COLUMNS = {
     ],
   },
   sprint: {
-    headers: ["Time", "PPS", "Pieces", "Finesse"],
+    headers: ["Finesse", "KPP", "KPS", "Pieces", "PPS", "Time"],
     cells: (m) => [
-      <td key="sprint">{fmtSprint(m.sprint)}</td>,
-      <td key="spps">{fmtNum(m.sprintPPS)}</td>,
+      <td key="sfin">{fmtFinesse(m.sprintFinesseFaults, m.sprintFinessePct)}</td>,
+      <td key="skpp">{fmtNum(m.sprintKPP)}</td>,
+      <td key="skps">{fmtNum(m.sprintKPS)}</td>,
       <td key="spc">{fmtInt(m.sprintPieces)}</td>,
-      <td key="sfin">{fmtInt(m.sprintFinesse)}</td>,
+      <td key="spps">{fmtNum(m.sprintPPS)}</td>,
+      <td key="sprint">{fmtSprint(m.sprint)}</td>,
     ],
   },
   blitz: {
-    headers: ["Score", "PPS", "Lines", "Level"],
+    headers: ["Finesse", "SPP", "Level", "Pieces", "PPS", "Score"],
     cells: (m) => [
-      <td key="blitz">{fmtBlitz(m.blitz)}</td>,
-      <td key="bpps">{fmtNum(m.blitzPPS)}</td>,
-      <td key="blines">{fmtInt(m.blitzLines)}</td>,
+      <td key="bfin">{fmtFinesse(m.blitzFinesseFaults, m.blitzFinessePct)}</td>,
+      <td key="bspp">{fmtNum(m.blitzSPP)}</td>,
       <td key="blvl">{fmtInt(m.blitzLevel)}</td>,
+      <td key="bpc">{fmtInt(m.blitzPieces)}</td>,
+      <td key="bpps">{fmtNum(m.blitzPPS)}</td>,
+      <td key="blitz">{fmtBlitz(m.blitz)}</td>,
     ],
   },
   zenith: {
-    headers: ["Altitude", "PPS", "APM", "VS", "KOs", "Time"],
+    headers: ["Time", "KOs", "Climb Speed", "APM", "PPS", "Altitude"],
     cells: (m) => [
-      <td key="zenith">{fmtZenith(m.zenith)}</td>,
-      <td key="zpps">{fmtNum(m.zenithPPS)}</td>,
-      <td key="zapm">{fmtNum(m.zenithAPM)}</td>,
-      <td key="zvs">{fmtNum(m.zenithVS)}</td>,
+      <td key="ztime">{fmtTimeMM(m.zenithTime)}</td>,
       <td key="zkos">{fmtInt(m.zenithKOs)}</td>,
-      <td key="ztime">{fmtTime(m.zenithTime)}</td>,
+      <td key="zclimb">{fmtClimb(m.zenithClimbAvg, m.zenithClimbPeak)}</td>,
+      <td key="zapm">{fmtNum(m.zenithAPM)}</td>,
+      <td key="zpps">{fmtNum(m.zenithPPS)}</td>,
+      <td key="zenith">{fmtZenith(m.zenith)}</td>,
     ],
   },
   zenithEx: {
-    headers: ["Altitude", "PPS", "APM", "VS"],
+    headers: ["Time", "KOs", "Climb Speed", "APM", "PPS", "Altitude"],
     cells: (m) => [
-      <td key="zenithEx">{fmtZenith(m.zenithEx)}</td>,
-      <td key="zepps">{fmtNum(m.zenithExPPS)}</td>,
+      <td key="zetime">{fmtTimeMM(m.zenithExTime)}</td>,
+      <td key="zekos">{fmtInt(m.zenithExKOs)}</td>,
+      <td key="zeclimb">{fmtClimb(m.zenithExClimbAvg, m.zenithExClimbPeak)}</td>,
       <td key="zeapm">{fmtNum(m.zenithExAPM)}</td>,
-      <td key="zevs">{fmtNum(m.zenithExVS)}</td>,
+      <td key="zepps">{fmtNum(m.zenithExPPS)}</td>,
+      <td key="zenithEx">{fmtZenith(m.zenithEx)}</td>,
     ],
   },
   zenithBest: {
