@@ -155,7 +155,58 @@ const isUnranked = (letterRank) => {
 const fmtTR = (m) => (isUnranked(m.letterRank) ? "Unranked" : m.tr);
 const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
 
-function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, since, fetchError }) {
+const fmtSprint = (ms) => {
+  if (ms == null) return "\u2013";
+  const totalSec = ms / 1000;
+  const min = Math.floor(totalSec / 60);
+  const sec = (totalSec % 60).toFixed(3);
+  return `${min}:${sec.padStart(6, "0")}`;
+};
+const fmtBlitz = (s) => (s == null ? "\u2013" : s.toLocaleString());
+const fmtZenith = (a) => (a == null ? "\u2013" : `${a.toFixed(1)}m`);
+
+const SORT_MODES = [
+  { key: "tr", label: "TR" },
+  { key: "sprint", label: "40L" },
+  { key: "blitz", label: "Blitz" },
+  { key: "zenith", label: "Quick Play" },
+];
+
+function sortMembers(list, mode) {
+  const sorted = [...list];
+  switch (mode) {
+    case "sprint":
+      sorted.sort((a, b) => {
+        if (a.sprint == null && b.sprint == null) return 0;
+        if (a.sprint == null) return 1;
+        if (b.sprint == null) return -1;
+        return a.sprint - b.sprint; // lower time = better
+      });
+      break;
+    case "blitz":
+      sorted.sort((a, b) => {
+        if (a.blitz == null && b.blitz == null) return 0;
+        if (a.blitz == null) return 1;
+        if (b.blitz == null) return -1;
+        return b.blitz - a.blitz; // higher score = better
+      });
+      break;
+    case "zenith":
+      sorted.sort((a, b) => {
+        if (a.zenith == null && b.zenith == null) return 0;
+        if (a.zenith == null) return 1;
+        if (b.zenith == null) return -1;
+        return b.zenith - a.zenith; // higher altitude = better
+      });
+      break;
+    default: // "tr"
+      sorted.sort((a, b) => b.tr - a.tr);
+  }
+  sorted.forEach((m, i) => { m.sortedRank = i + 1; });
+  return sorted;
+}
+
+function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, since, fetchError, sortMode, setSortMode }) {
   const normalizeRank = (rank) => {
     if (!rank) return "placeholder";
     return rank.toLowerCase().replace("+", "plus").replace("-", "minus");
@@ -188,6 +239,27 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
       <Highlights highlights={highlights} since={since} />
       <Recap recap={recap} />
 
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontWeight: 600 }}>Rank by:</span>
+        {SORT_MODES.map((mode) => (
+          <button
+            key={mode.key}
+            onClick={() => setSortMode(mode.key)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "8px",
+              border: sortMode === mode.key ? "2px solid var(--link-color)" : "1px solid var(--table-border)",
+              background: sortMode === mode.key ? "var(--link-color)" : "var(--table-header-bg)",
+              color: sortMode === mode.key ? "#fff" : "var(--text-color)",
+              fontWeight: sortMode === mode.key ? 700 : 400,
+              cursor: "pointer",
+            }}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
       <input
         placeholder="Search players..."
         value={searchTerm}
@@ -214,6 +286,9 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
             <th>Grade</th>
             <th>Letter Rank</th>
             <th>TR</th>
+            <th>40L</th>
+            <th>Blitz</th>
+            <th>QP</th>
             <th>PPS</th>
             <th>APM</th>
             <th>VS</th>
@@ -233,7 +308,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
                     : "var(--table-row-odd)"
               }}
             >
-              <td>{m.clubRank ?? i + 1}</td>
+              <td>{sortMode === "tr" ? (m.clubRank ?? i + 1) : (m.sortedRank ?? i + 1)}</td>
               <td><Movement move={m.move} /></td>
               <td>{m.realName}</td>
 
@@ -265,6 +340,9 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
               </td>
 
               <td>{fmtTR(m)}</td>
+              <td>{fmtSprint(m.sprint)}</td>
+              <td>{fmtBlitz(m.blitz)}</td>
+              <td>{fmtZenith(m.zenith)}</td>
               <td>{m.pps}</td>
               <td>{m.apm}</td>
               <td>{m.vs}</td>
@@ -288,6 +366,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchError, setFetchError] = useState(null);
+  const [sortMode, setSortMode] = useState("tr");
   const location = useLocation();
 
   const applyMode = (dark) => {
@@ -413,13 +492,15 @@ export default function App() {
           path="/"
           element={
             <Leaderboard
-              members={members}
+              members={sortMembers(members, sortMode)}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               recap={recap}
               highlights={highlights}
               since={since}
               fetchError={fetchError}
+              sortMode={sortMode}
+              setSortMode={setSortMode}
             />
           }
         />

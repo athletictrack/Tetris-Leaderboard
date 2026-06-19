@@ -66,10 +66,10 @@ function loadMembers() {
   }
 }
 
-// Fetch one member
+// Fetch one member (all summaries in a single call)
 async function fetchOneUser(member) {
   try {
-    const url = `https://ch.tetr.io/api/users/${member.username}/summaries/league`;
+    const url = `https://ch.tetr.io/api/users/${member.username}/summaries`;
     const response = await axios.get(url, {
       headers: { "User-Agent": USER_AGENT },
       timeout: 10000,
@@ -86,25 +86,35 @@ async function fetchOneUser(member) {
         rank: "-",
         standing_world: 0,
         standing_local: 0,
+        sprint: null,
+        blitz: null,
+        zenith: null,
         updated: Date.now(),
       };
       console.warn(`User not found or private: ${member.username}`);
       return;
     }
 
-    const data = response.data.data;
+    const d = response.data.data;
+    const league = d.league || {};
+    const sprintRec = d["40l"]?.record;
+    const blitzRec = d.blitz?.record;
+    const zenithRec = d.zenith?.record;
 
     leaderboardCache[member.username] = {
       realName: member.realName,
       username: member.username,
       grade: member.grade,
-      letterRank: data.rank || "-",   // letter rank from API (S, S+, etc.)
-      tr: data.tr || 0,               // rating used for ordering club leaderboard
-      pps: data.pps || 0,
-      apm: data.apm || 0,
-      vs: data.vs || 0,
-      standing_world: data.standing || 0,      // global numeric rank
-      standing_local: data.standing_local || 0,// country numeric rank
+      letterRank: league.rank || "-",
+      tr: league.tr || 0,
+      pps: league.pps || 0,
+      apm: league.apm || 0,
+      vs: league.vs || 0,
+      standing_world: league.standing || 0,
+      standing_local: league.standing_local || 0,
+      sprint: sprintRec ? sprintRec.results.stats.finaltime : null,
+      blitz: blitzRec ? blitzRec.results.stats.score : null,
+      zenith: zenithRec ? zenithRec.results.stats.zenith.altitude : null,
       updated: Date.now(),
     };
 
