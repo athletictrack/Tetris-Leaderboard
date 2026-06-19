@@ -202,12 +202,23 @@ const isUnranked = (letterRank) => {
 };
 const fmtTR = (m) => (isUnranked(m.letterRank) ? "Unranked" : m.tr);
 const fmtStanding = (s) => (s == null || s <= 0 ? "\u2013" : s.toLocaleString());
+const fmtNum = (v, d = 2) => (v == null ? "\u2013" : Number(v).toFixed(d));
+const fmtInt = (v) => (v == null ? "\u2013" : v.toLocaleString());
+const fmtTime = (ms) => {
+  if (ms == null) return "\u2013";
+  const totalSec = ms / 1000;
+  const min = Math.floor(totalSec / 60);
+  const sec = Math.floor(totalSec % 60).toString().padStart(2, "0");
+  return `${min}:${sec}`;
+};
 
 const SORT_MODES = [
   { key: "tr", label: "TR" },
   { key: "sprint", label: "40L" },
   { key: "blitz", label: "Blitz" },
   { key: "zenith", label: "Quick Play" },
+  { key: "zenithEx", label: "Expert QP" },
+  { key: "zenithBest", label: "All-Time QP" },
 ];
 
 const MODE_COLUMNS = {
@@ -224,18 +235,48 @@ const MODE_COLUMNS = {
     ],
   },
   sprint: {
-    headers: ["40L Time"],
-    cells: (m) => [<td key="sprint">{fmtSprint(m.sprint)}</td>],
+    headers: ["Time", "PPS", "Pieces", "Finesse"],
+    cells: (m) => [
+      <td key="sprint">{fmtSprint(m.sprint)}</td>,
+      <td key="spps">{fmtNum(m.sprintPPS)}</td>,
+      <td key="spc">{fmtInt(m.sprintPieces)}</td>,
+      <td key="sfin">{fmtInt(m.sprintFinesse)}</td>,
+    ],
   },
   blitz: {
-    headers: ["Blitz Score"],
-    cells: (m) => [<td key="blitz">{fmtBlitz(m.blitz)}</td>],
+    headers: ["Score", "PPS", "Lines", "Level"],
+    cells: (m) => [
+      <td key="blitz">{fmtBlitz(m.blitz)}</td>,
+      <td key="bpps">{fmtNum(m.blitzPPS)}</td>,
+      <td key="blines">{fmtInt(m.blitzLines)}</td>,
+      <td key="blvl">{fmtInt(m.blitzLevel)}</td>,
+    ],
   },
   zenith: {
-    headers: ["Quick Play", "Expert QP"],
+    headers: ["Altitude", "PPS", "APM", "VS", "KOs", "Time"],
     cells: (m) => [
       <td key="zenith">{fmtZenith(m.zenith)}</td>,
+      <td key="zpps">{fmtNum(m.zenithPPS)}</td>,
+      <td key="zapm">{fmtNum(m.zenithAPM)}</td>,
+      <td key="zvs">{fmtNum(m.zenithVS)}</td>,
+      <td key="zkos">{fmtInt(m.zenithKOs)}</td>,
+      <td key="ztime">{fmtTime(m.zenithTime)}</td>,
+    ],
+  },
+  zenithEx: {
+    headers: ["Altitude", "PPS", "APM", "VS"],
+    cells: (m) => [
       <td key="zenithEx">{fmtZenith(m.zenithEx)}</td>,
+      <td key="zepps">{fmtNum(m.zenithExPPS)}</td>,
+      <td key="zeapm">{fmtNum(m.zenithExAPM)}</td>,
+      <td key="zevs">{fmtNum(m.zenithExVS)}</td>,
+    ],
+  },
+  zenithBest: {
+    headers: ["QP All-Time", "Expert All-Time"],
+    cells: (m) => [
+      <td key="zbest">{fmtZenith(m.zenithBest)}</td>,
+      <td key="zebest">{fmtZenith(m.zenithExBest)}</td>,
     ],
   },
 };
@@ -264,7 +305,23 @@ function sortMembers(list, mode) {
         if (a.zenith == null && b.zenith == null) return 0;
         if (a.zenith == null) return 1;
         if (b.zenith == null) return -1;
-        return b.zenith - a.zenith; // higher altitude = better
+        return b.zenith - a.zenith;
+      });
+      break;
+    case "zenithEx":
+      sorted.sort((a, b) => {
+        if (a.zenithEx == null && b.zenithEx == null) return 0;
+        if (a.zenithEx == null) return 1;
+        if (b.zenithEx == null) return -1;
+        return b.zenithEx - a.zenithEx;
+      });
+      break;
+    case "zenithBest":
+      sorted.sort((a, b) => {
+        if (a.zenithBest == null && b.zenithBest == null) return 0;
+        if (a.zenithBest == null) return 1;
+        if (b.zenithBest == null) return -1;
+        return b.zenithBest - a.zenithBest;
       });
       break;
     default: // "tr"
