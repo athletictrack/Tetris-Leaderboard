@@ -317,7 +317,7 @@ export default function App() {
   useEffect(() => {
     applyMode(darkMode);
 
-    let pollDelay = 5000;      // normal interval (twice as fast)
+    let pollDelay = 500;       // poll after every backend fetch
     const MAX_DELAY = 120000;  // max 2 minutes on repeated errors
 
     const fetchData = async () => {
@@ -330,7 +330,7 @@ export default function App() {
         setHighlights(data.highlights || null);
         setSince(data.since || null);
         setFetchError(null);
-        pollDelay = 5000; // reset on success
+        pollDelay = 500; // reset on success
       } catch (err) {
         console.error("Failed to fetch leaderboard:", err);
         setFetchError(err.message || "Failed to load leaderboard data");
