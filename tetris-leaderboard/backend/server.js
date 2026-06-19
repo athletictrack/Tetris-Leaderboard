@@ -15,7 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const MEMBERS_FILE = path.join(__dirname, "members.json");
 const REQUEST_DELAY = Math.max(500, parseInt(process.env.REQUEST_DELAY_MS) || 500);
-const USER_AGENT = "TetrisLeaderboard/1.0 (https://github.com/athletictrack/Tetris-Leaderboard)";
+const USER_AGENT = "TetrisLeaderboard/1.0 (https://github.com/ihmttmhi/Tetris-Leaderboard)";
 // ==================
 
 // Trust first proxy (Render, etc.) so rate limiter sees real client IPs
@@ -102,6 +102,24 @@ async function fetchOneUser(member) {
     const blitzRec = d.blitz?.record;
     const zenithRec = d.zenith?.record;
     const zenithExRec = d.zenithex?.record;
+    const zenithBestRec = d.zenith?.best?.record;
+    const zenithExBestRec = d.zenithex?.best?.record;
+
+    // Extract detailed stats for 40L
+    const sprintStats = sprintRec?.results?.stats;
+    const sprintAgg = sprintRec?.results?.aggregatestats;
+
+    // Extract detailed stats for Blitz
+    const blitzStats = blitzRec?.results?.stats;
+    const blitzAgg = blitzRec?.results?.aggregatestats;
+
+    // Extract detailed stats for Zenith (current season)
+    const zenithStats = zenithRec?.results?.stats;
+    const zenithAgg = zenithRec?.results?.aggregatestats;
+
+    // Extract detailed stats for Zenith Expert (current season)
+    const zenithExStats = zenithExRec?.results?.stats;
+    const zenithExAgg = zenithExRec?.results?.aggregatestats;
 
     leaderboardCache[member.username] = {
       realName: member.realName,
@@ -114,10 +132,32 @@ async function fetchOneUser(member) {
       vs: league.vs || 0,
       standing_world: league.standing || 0,
       standing_local: league.standing_local || 0,
-      sprint: sprintRec ? sprintRec.results.stats.finaltime : null,
-      blitz: blitzRec ? blitzRec.results.stats.score : null,
-      zenith: zenithRec ? zenithRec.results.stats.zenith.altitude : null,
-      zenithEx: zenithExRec ? zenithExRec.results.stats.zenith.altitude : null,
+      // 40L
+      sprint: sprintStats ? sprintStats.finaltime : null,
+      sprintPPS: sprintAgg?.pps ?? null,
+      sprintPieces: sprintStats?.piecesplaced ?? null,
+      sprintFinesse: sprintStats?.finesse?.faults ?? null,
+      // Blitz
+      blitz: blitzStats ? blitzStats.score : null,
+      blitzPPS: blitzAgg?.pps ?? null,
+      blitzLines: blitzStats?.lines ?? null,
+      blitzLevel: blitzStats?.level ?? null,
+      // Zenith (current season)
+      zenith: zenithStats ? zenithStats.zenith.altitude : null,
+      zenithPPS: zenithAgg?.pps ?? null,
+      zenithAPM: zenithAgg?.apm ?? null,
+      zenithVS: zenithAgg?.vsscore ?? null,
+      zenithKOs: zenithStats?.kills ?? null,
+      zenithTime: zenithStats?.finaltime ?? null,
+      // Zenith all-time best
+      zenithBest: zenithBestRec ? zenithBestRec.results.stats.zenith.altitude : null,
+      // Zenith Expert (current season)
+      zenithEx: zenithExStats ? zenithExStats.zenith.altitude : null,
+      zenithExPPS: zenithExAgg?.pps ?? null,
+      zenithExAPM: zenithExAgg?.apm ?? null,
+      zenithExVS: zenithExAgg?.vsscore ?? null,
+      // Zenith Expert all-time best
+      zenithExBest: zenithExBestRec ? zenithExBestRec.results.stats.zenith.altitude : null,
       updated: Date.now(),
     };
 

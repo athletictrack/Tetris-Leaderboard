@@ -20,7 +20,7 @@ function safeErrorMsg(err) {
 
 const TZ = process.env.WEEK_TZ || "America/Toronto";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "";
-const GITHUB_REPO = process.env.GITHUB_REPO || "athletictrack/Tetris-Leaderboard";
+const GITHUB_REPO = process.env.GITHUB_REPO || "ihmttmhi/Tetris-Leaderboard";
 const DATA_BRANCH = process.env.HISTORY_BRANCH || "leaderboard-data";
 const DATA_PATH = process.env.HISTORY_PATH || "history.json";
 const LOCAL_FILE = path.join(__dirname, "history.local.json");
