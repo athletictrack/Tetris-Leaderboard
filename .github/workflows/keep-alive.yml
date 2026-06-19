@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Ping Render site
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tetris-leaderboard-online.onrender.com/)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://tetris-leaderboard-online.onrender.com/api/leaderboard)
           echo "Status: $STATUS"
           if [ "$STATUS" -ge 500 ]; then
             echo "::warning::Site returned $STATUS"
