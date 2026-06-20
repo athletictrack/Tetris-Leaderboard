@@ -29,13 +29,18 @@ const MAX_SNAPSHOTS = 8;
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 let snapshots = []; // [{ weekStart, ranks, names, letterRanks?, bestSprints?, bestBlitz?, bestZenith? }]
-let knownRecords = {}; // { username: { sprintTs, blitzTs, zenithTs, zenithExTs, letterRank } }
-let recentAchievements = []; // [{ username, realName, type, value, achievedAt }]
-const MAX_ACHIEVEMENTS = 20;
-const ACHIEVEMENT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // keep for 7 days
 let remoteSha = null; // sha of history.json on the data branch (for updates)
 let loaded = false;
 let persisting = false;
+
+// News from TETR.IO news API — fetched periodically, not self-detected
+const NEWS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // show last 7 days
+const NEWS_FETCH_INTERVAL_MS = 5 * 60 * 1000; // refresh every 5 minutes
+let cachedNews = []; // [{ username, realName, type, value, ts, replayId? }]
+let userIdCache = {}; // { username: tetrio_user_id }
+let lastNewsFetch = 0;
+let newsFetching = false;
+const USER_AGENT = "TetrisLeaderboard/1.0 (https://github.com/ihmttmhi/Tetris-Leaderboard)";
 
 // ----- time helpers -----
 
@@ -115,8 +120,6 @@ async function loadFromGitHub() {
       snapshots = data;
     } else {
       snapshots = data.snapshots || [];
-      knownRecords = data.knownRecords || {};
-      recentAchievements = data.recentAchievements || [];
     }
     console.log(`Loaded ${snapshots.length} weekly snapshot(s) from GitHub`);
   } catch (err) {
@@ -135,7 +138,7 @@ async function saveToGitHub() {
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${encodeURIComponent(
     DATA_PATH
   )}`;
-  const persistData = { snapshots, knownRecords, recentAchievements };
+  const persistData = { snapshots };
   const content = Buffer.from(JSON.stringify(persistData, null, 2)).toString("base64");
   const body = {
     message: `Update leaderboard history (${weekStartKey()})`,
@@ -175,8 +178,6 @@ function loadLocal() {
       snapshots = data;
     } else {
       snapshots = data.snapshots || [];
-      knownRecords = data.knownRecords || {};
-      recentAchievements = data.recentAchievements || [];
     }
     console.log(`Loaded ${snapshots.length} weekly snapshot(s) from local file`);
   } catch (err) {
@@ -187,7 +188,7 @@ function loadLocal() {
 
 function saveLocal() {
   try {
-    const persistData = { snapshots, knownRecords, recentAchievements };
+    const persistData = { snapshots };
     fs.writeFileSync(LOCAL_FILE, JSON.stringify(persistData, null, 2));
   } catch (err) {
     console.error("Failed to write local history:", err.message);
@@ -301,128 +302,75 @@ function getBestRank(username) {
   return best;
 }
 
-// TETR.IO letter rank ordering (lowest to highest).
-const RANK_ORDER = [
-  "d", "d+", "c-", "c", "c+", "b-", "b", "b+",
-  "a-", "a", "a+", "s-", "s", "s+", "ss", "u", "x", "x+",
-];
-function rankIndex(r) {
-  if (!r) return -1;
-  return RANK_ORDER.indexOf(r.toLowerCase().trim());
+// ----- TETR.IO News API -----
+
+// Fetch a single user's TETR.IO user ID (cached)
+async function fetchUserId(username) {
+  if (userIdCache[username]) return userIdCache[username];
+  try {
+    const res = await axios.get(`https://ch.tetr.io/api/users/${username}`, {
+      headers: { "User-Agent": USER_AGENT },
+      timeout: 10000,
+    });
+    if (res.data.success && res.data.data?._id) {
+      userIdCache[username] = res.data.data._id;
+      return res.data.data._id;
+    }
+  } catch (err) {
+    console.warn(`Failed to fetch user ID for ${username}:`, safeErrorMsg(err));
+  }
+  return null;
 }
 
-// Best (highest) letter rank a player has ever held across all snapshots.
-function getBestLetterRank(username) {
-  let best = -1;
-  for (const s of snapshots) {
-    if (!s.letterRanks) continue;
-    const idx = rankIndex(s.letterRanks[username]);
-    if (idx > best) best = idx;
+// Fetch news for a single user from TETR.IO
+async function fetchUserNews(username, realName, userId) {
+  try {
+    const res = await axios.get(`https://ch.tetr.io/api/news/user_${userId}`, {
+      headers: { "User-Agent": USER_AGENT },
+      timeout: 10000,
+    });
+    if (!res.data.success) return [];
+    const cutoff = new Date(Date.now() - NEWS_TTL_MS).toISOString();
+    return (res.data.data.news || [])
+      .filter((n) => (n.type === "rankup" || n.type === "personalbest") && n.ts >= cutoff)
+      .map((n) => {
+        const d = n.data;
+        if (n.type === "rankup") {
+          return { username, realName, type: "rank", value: d.rank, ts: n.ts };
+        }
+        const gameMap = { "40l": "sprint", blitz: "blitz", zenith: "zenith", zenithex: "zenithEx" };
+        const mapped = gameMap[d.gametype] || d.gametype;
+        return { username, realName, type: mapped, value: d.result, ts: n.ts, replayId: d.replayid || null };
+      });
+  } catch (err) {
+    console.warn(`Failed to fetch news for ${username}:`, safeErrorMsg(err));
+    return [];
   }
-  return best;
 }
 
-// Prune achievements older than TTL
-function pruneAchievements() {
-  const cutoff = Date.now() - ACHIEVEMENT_TTL_MS;
-  recentAchievements = recentAchievements.filter((a) => a.achievedAt > cutoff);
-}
-
-// Deduplicate: don't add an achievement if an identical one already exists
-function hasDuplicate(username, type, value) {
-  return recentAchievements.some(
-    (a) => a.username === username && a.type === type && a.value === value
-  );
-}
-
-// Check for new PBs and rank changes by comparing record timestamps.
-// Called after each player fetch with their current data.
-function checkAchievements(username, realName, records) {
-  if (!loaded) return;
-  const prev = knownRecords[username] || {};
-  let changed = false;
-
-  // 40L PB: timestamp changed = new record was set
-  if (records.sprintTs && records.sprintTs !== prev.sprintTs) {
-    if (prev.sprintTs && !hasDuplicate(username, "sprint", records.sprint)) {
-      recentAchievements.push({
-        username, realName, type: "sprint",
-        value: records.sprint, achievedAt: Date.now(),
-      });
+// Fetch news for all members — called periodically from server.js
+async function fetchAllNews(members) {
+  if (newsFetching) return;
+  if (Date.now() - lastNewsFetch < NEWS_FETCH_INTERVAL_MS) return;
+  newsFetching = true;
+  try {
+    const allNews = [];
+    for (const member of members) {
+      const userId = await fetchUserId(member.username);
+      if (!userId) continue;
+      const news = await fetchUserNews(member.username, member.realName, userId);
+      allNews.push(...news);
+      // Small delay to avoid hammering TETR.IO API
+      await new Promise((r) => setTimeout(r, 200));
     }
-    changed = true;
-  }
-
-  // Blitz PB
-  if (records.blitzTs && records.blitzTs !== prev.blitzTs) {
-    if (prev.blitzTs && !hasDuplicate(username, "blitz", records.blitz)) {
-      recentAchievements.push({
-        username, realName, type: "blitz",
-        value: records.blitz, achievedAt: Date.now(),
-      });
-    }
-    changed = true;
-  }
-
-  // Quick Play PB (all-time best only)
-  if (records.zenithBestTs && records.zenithBestTs !== prev.zenithBestTs) {
-    if (prev.zenithBestTs && !hasDuplicate(username, "zenith", records.zenithBest)) {
-      recentAchievements.push({
-        username, realName, type: "zenith",
-        value: records.zenithBest, achievedAt: Date.now(),
-      });
-    }
-    changed = true;
-  }
-
-  // Expert QP PB (all-time best only)
-  if (records.zenithExBestTs && records.zenithExBestTs !== prev.zenithExBestTs) {
-    if (prev.zenithExBestTs && !hasDuplicate(username, "zenithEx", records.zenithExBest)) {
-      recentAchievements.push({
-        username, realName, type: "zenithEx",
-        value: records.zenithExBest, achievedAt: Date.now(),
-      });
-    }
-    changed = true;
-  }
-
-  // New letter rank — only fires if higher than the HIGHEST rank ever stored
-  if (records.letterRank) {
-    const currentIdx = rankIndex(records.letterRank);
-    // Compare against highest-ever rank, not just the last-seen rank
-    const highestIdx = rankIndex(prev.highestRank || prev.letterRank);
-    if (currentIdx > 0 && highestIdx >= 0 && currentIdx > highestIdx &&
-        !hasDuplicate(username, "rank", records.letterRank)) {
-      recentAchievements.push({
-        username, realName, type: "rank",
-        value: records.letterRank, achievedAt: Date.now(),
-      });
-      changed = true;
-    }
-  }
-
-  // Update known records — store highest-ever rank
-  const currentRankIdx = rankIndex(records.letterRank);
-  const prevHighestIdx = rankIndex(prev.highestRank || prev.letterRank);
-  const highestRank = currentRankIdx > prevHighestIdx
-    ? records.letterRank
-    : (prev.highestRank || prev.letterRank);
-
-  knownRecords[username] = {
-    sprintTs: records.sprintTs || prev.sprintTs,
-    blitzTs: records.blitzTs || prev.blitzTs,
-    zenithBestTs: records.zenithBestTs || prev.zenithBestTs,
-    zenithExBestTs: records.zenithExBestTs || prev.zenithExBestTs,
-    letterRank: records.letterRank || prev.letterRank,
-    highestRank: highestRank || prev.highestRank || null,
-  };
-
-  if (changed) {
-    pruneAchievements();
-    if (recentAchievements.length > MAX_ACHIEVEMENTS) {
-      recentAchievements = recentAchievements.slice(-MAX_ACHIEVEMENTS);
-    }
-    persist();
+    allNews.sort((a, b) => (b.ts > a.ts ? 1 : b.ts < a.ts ? -1 : 0));
+    cachedNews = allNews;
+    lastNewsFetch = Date.now();
+    console.log(`Fetched ${allNews.length} news items from TETR.IO for ${members.length} members`);
+  } catch (err) {
+    console.error("Error fetching news:", safeErrorMsg(err));
+  } finally {
+    newsFetching = false;
   }
 }
 
@@ -463,11 +411,11 @@ function getHighlights(list) {
       }));
   }
 
-  // Real-time achievements from record timestamp tracking — sorted newest first
-  pruneAchievements();
-  const achievements = recentAchievements
-    .map((a) => ({ username: a.username, realName: a.realName, type: a.type, value: a.value, achievedAt: a.achievedAt }))
-    .sort((a, b) => b.achievedAt - a.achievedAt);
+  // Achievements from TETR.IO news API — already sorted newest first
+  const achievements = cachedNews.map((a) => ({
+    username: a.username, realName: a.realName, type: a.type,
+    value: a.value, ts: a.ts, replayId: a.replayId || null,
+  }));
 
   return { climbers, fallers, newPeaks, achievements };
 }
@@ -495,7 +443,7 @@ function getRecap() {
 module.exports = {
   init,
   maybeRollover,
-  checkAchievements,
+  fetchAllNews,
   getMovement,
   getRecap,
   getHighlights,

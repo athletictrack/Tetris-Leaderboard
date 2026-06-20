@@ -191,19 +191,6 @@ async function fetchOneUser(member) {
       updated: Date.now(),
     };
 
-    // Check for new PBs and rank changes using record timestamps
-    history.checkAchievements(member.username, member.realName, {
-      sprint: sprintStats ? sprintStats.finaltime : null,
-      sprintTs: sprintRec?.ts || null,
-      blitz: blitzStats ? blitzStats.score : null,
-      blitzTs: blitzRec?.ts || null,
-      zenithBest: zenithBestRec ? zenithBestRec.results.stats.zenith.altitude : null,
-      zenithBestTs: zenithBestRec?.ts || null,
-      zenithExBest: zenithExBestRec ? zenithExBestRec.results.stats.zenith.altitude : null,
-      zenithExBestTs: zenithExBestRec?.ts || null,
-      letterRank: league.rank || null,
-    });
-
     console.log(`Updated ${member.username}`);
     notifyClients();
   } catch (err) {
@@ -221,6 +208,10 @@ async function rotatingUpdater() {
   } catch (err) {
     console.error("Unexpected error in rotatingUpdater:", err.message);
   }
+  // Periodically refresh news from TETR.IO (rate-limited inside fetchAllNews)
+  history.fetchAllNews(members).catch((err) =>
+    console.error("News fetch error:", err.message)
+  );
   setTimeout(rotatingUpdater, REQUEST_DELAY);
 }
 
