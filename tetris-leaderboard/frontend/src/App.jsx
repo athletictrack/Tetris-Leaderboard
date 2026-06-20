@@ -92,7 +92,7 @@ const fmtZenith = (a) => (a == null ? "\u2013" : `${a.toFixed(1)}m`);
 
 const fmtTimeAgo = (ts) => {
   if (!ts) return "";
-  const diff = Date.now() - ts;
+  const diff = Date.now() - (typeof ts === "string" ? new Date(ts).getTime() : ts);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -108,27 +108,34 @@ const normalizeRank = (rank) => {
 };
 
 function AchievementLine({ a }) {
-  const name = a.username.toUpperCase();
+  const profileUrl = `https://ch.tetr.io/u/${a.username}`;
+  const nameLink = <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{a.username.toUpperCase()}</a>;
   switch (a.type) {
     case "rank":
-      return <>{name} achieved <img src={`/ranks/${normalizeRank(a.value)}.png`} alt={a.value.toUpperCase()} height="20" style={{ verticalAlign: "middle", margin: "0 4px" }} onError={(e) => { e.target.src = "/ranks/placeholder.png"; }} /> rank</>;
+      return <>{nameLink} achieved <img src={`/ranks/${normalizeRank(a.value)}.png`} alt={a.value.toUpperCase()} height="20" style={{ verticalAlign: "middle", margin: "0 4px" }} onError={(e) => { e.target.src = "/ranks/placeholder.png"; }} /> rank</>;
     case "sprint":
-      return <>{name} got a new personal best in 40 Lines with a time of {fmtSprint(a.value)}</>;
+      return <>{nameLink} got a new personal best in 40 Lines with a time of {fmtSprint(a.value)}</>;
     case "blitz":
-      return <>{name} got a new personal best in Blitz with a score of {fmtBlitz(a.value)}</>;
+      return <>{nameLink} got a new personal best in Blitz with a score of {fmtBlitz(a.value)}</>;
     case "zenith":
-      return <>{name} got a new personal best in Quick Play with an altitude of {fmtZenith(a.value)}</>;
+      return <>{nameLink} got a new personal best in Quick Play with an altitude of {fmtZenith(a.value)}</>;
     case "zenithEx":
-      return <>{name} got a new personal best in Expert Quick Play with an altitude of {fmtZenith(a.value)}</>;
+      return <>{nameLink} got a new personal best in Expert Quick Play with an altitude of {fmtZenith(a.value)}</>;
     default:
       return null;
   }
 }
 
+const INITIAL_NEWS_COUNT = 5;
+
 function Highlights({ highlights, since }) {
+  const [expanded, setExpanded] = useState(false);
   if (!highlights) return null;
   const { achievements = [] } = highlights;
   if (!achievements.length) return null;
+
+  const visible = expanded ? achievements : achievements.slice(0, INITIAL_NEWS_COUNT);
+  const hasMore = achievements.length > INITIAL_NEWS_COUNT;
 
   return (
     <div
@@ -147,12 +154,30 @@ function Highlights({ highlights, since }) {
       <div style={{ fontWeight: 700, fontSize: "1.05em", marginBottom: 4 }}>
         LATEST NEWS
       </div>
-      {achievements.map((a, i) => (
-        <div key={`${a.username}-${a.type}-${i}`} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {visible.map((a, i) => (
+        <div key={`${a.username}-${a.type}-${a.ts}-${i}`} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ fontWeight: 500 }}><AchievementLine a={a} /></div>
-          <div style={{ color: "var(--footer-color)", fontSize: "0.85em" }}>{fmtTimeAgo(a.achievedAt)}</div>
+          <div style={{ color: "var(--footer-color)", fontSize: "0.85em" }}>{fmtTimeAgo(a.ts)}</div>
         </div>
       ))}
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            background: "none",
+            border: "1px solid var(--table-border)",
+            borderRadius: 6,
+            padding: "6px 12px",
+            cursor: "pointer",
+            color: "inherit",
+            fontSize: "0.9em",
+            alignSelf: "center",
+            marginTop: 4,
+          }}
+        >
+          {expanded ? "Show less" : `Show ${achievements.length - INITIAL_NEWS_COUNT} more`}
+        </button>
+      )}
     </div>
   );
 }
