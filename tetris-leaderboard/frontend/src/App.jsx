@@ -284,17 +284,16 @@ const SORT_MODES = [
 
 const MODE_COLUMNS = {
   tr: {
-    headers: ["Record", "APM", "PPS", "VS", "Glicko", "TR"],
+    headers: ["Grade", "TR", "Letter Rank", "Record", "PPS", "APM", "VS", "World"],
     cells: (m, normalizeRank, fmtStanding) => [
+      <td key="grade">{m.grade || "\u2013"}</td>,
+      <td key="tr">{fmtTR(m)}</td>,
+      <td key="letterRank"><img src={`/ranks/${normalizeRank(m.letterRank)}.png`} alt={m.letterRank} height="20" style={{ verticalAlign: "middle" }} onError={(e) => { e.target.src = "/ranks/placeholder.png"; }} /></td>,
       <td key="rec">{fmtRecord(m.gamesWon, m.gamesPlayed)}</td>,
-      <td key="apm">{fmtNum(m.apm)}</td>,
       <td key="pps">{fmtNum(m.pps)}</td>,
+      <td key="apm">{fmtNum(m.apm)}</td>,
       <td key="vs">{fmtNum(m.vs)}</td>,
-      <td key="glicko">{fmtGlicko(m.glicko, m.rd)}</td>,
-      <td key="tr">
-        {fmtTR(m)}{" "}
-        <img src={`/ranks/${normalizeRank(m.letterRank)}.png`} alt={m.letterRank} height="20" style={{ verticalAlign: "middle" }} onError={(e) => { e.target.src = "/ranks/placeholder.png"; }} />
-      </td>,
+      <td key="world">{fmtStanding(m.standing_world)}</td>,
     ],
   },
   sprint: {
@@ -476,11 +475,11 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
         <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 2px" }}>
           <thead>
             <tr style={{ background: "var(--table-header-bg)" }}>
-              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>#</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Rank</th>
               <th style={{ padding: "10px 8px", textAlign: "center", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Change</th>
-              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Player</th>
-              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Username</th>
-              {MODE_COLUMNS[sortMode].headers.map((h) => <th key={h} style={{ padding: "10px 8px", textAlign: "right", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>{h}</th>)}
+              <th style={{ padding: "10px 8px", textAlign: "center", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Player</th>
+              <th style={{ padding: "10px 8px", textAlign: "center", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>Username</th>
+              {MODE_COLUMNS[sortMode].headers.map((h) => <th key={h} style={{ padding: "10px 8px", textAlign: "center", fontSize: "0.85em", textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "2px solid var(--table-border)" }}>{h}</th>)}
             </tr>
           </thead>
 
@@ -490,15 +489,12 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
                 key={m.username}
                 style={{
                   background: i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)",
-                  transition: "background 0.15s",
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "var(--table-border)"}
-                onMouseLeave={(e) => e.currentTarget.style.background = i % 2 === 0 ? "var(--table-row-even)" : "var(--table-row-odd)"}
               >
-                <td style={{ padding: "8px", fontWeight: 700, color: "var(--footer-color)" }}>{sortMode === "tr" ? (m.clubRank ?? i + 1) : (m.sortedRank ?? i + 1)}</td>
+                <td style={{ padding: "8px", fontWeight: 700, color: "var(--footer-color)", textAlign: "center" }}>{sortMode === "tr" ? (m.clubRank ?? i + 1) : (m.sortedRank ?? i + 1)}</td>
                 <td style={{ padding: "8px", textAlign: "center" }}><Movement move={m.move} /></td>
-                <td style={{ padding: "8px", fontWeight: 500 }}>{m.realName}</td>
-                <td style={{ padding: "8px" }}>
+                <td style={{ padding: "8px", fontWeight: 500, textAlign: "center" }}>{m.realName}</td>
+                <td style={{ padding: "8px", textAlign: "center" }}>
                   <a
                     href={`https://ch.tetr.io/u/${m.username}`}
                     target="_blank"
@@ -509,7 +505,7 @@ function Leaderboard({ members, searchTerm, setSearchTerm, recap, highlights, si
                   </a>
                 </td>
                 {MODE_COLUMNS[sortMode].cells(m, normalizeRank, fmtStanding).map((cell, ci) => (
-                  React.cloneElement(cell, { style: { ...cell.props.style, padding: "8px", textAlign: "right" } })
+                  React.cloneElement(cell, { style: { ...cell.props.style, padding: "8px", textAlign: "center" } })
                 ))}
               </tr>
             ))}
