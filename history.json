@@ -318,6 +318,11 @@
       "zenithBestTs": "2025-05-29T01:36:45.200Z",
       "zenithExBestTs": "2025-03-02T19:14:41.962Z",
       "letterRank": "z"
+    },
+    "not_sucram": {
+      "blitzTs": "2026-05-30T04:36:01.621Z",
+      "zenithBestTs": "2026-05-22T13:03:03.261Z",
+      "letterRank": "c"
     }
   },
   "recentAchievements": []
