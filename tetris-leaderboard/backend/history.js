@@ -79,6 +79,14 @@ function dayKey(date = new Date()) {
   return `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
 }
 
+// Returns the date (YYYY-MM-DD) that is N calendar days ago in Toronto time.
+function daysAgoKey(n) {
+  const p = torontoParts(new Date());
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.day));
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
 // ----- GitHub persistence -----
 
 function ghHeaders() {
@@ -266,9 +274,9 @@ function maybeRollover(currentRanks, currentNames, currentLetterRanks, currentPB
   persist(); // fire and forget
 }
 
-// Find the snapshot closest to (but not after) 7 days ago.
+// Find the snapshot closest to (but not after) 7 days ago in Toronto time.
 function getBaselineSnapshot() {
-  const target = dayKey(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const target = daysAgoKey(7);
   for (let i = snapshots.length - 1; i >= 0; i--) {
     if (snapshots[i].weekStart <= target) return snapshots[i];
   }
