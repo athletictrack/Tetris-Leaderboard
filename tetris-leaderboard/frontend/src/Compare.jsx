@@ -133,6 +133,9 @@ const P2_COLOR = "#e74c3c";
 
 /* ── Stat comparison bar ── */
 
+const BETTER_COLOR = "#2ecc71";
+const NEUTRAL_COLOR = "#555";
+
 function StatBar({ label, val1, val2, higherIsBetter = true, format }) {
   const fmt = format || ((v) => v == null ? "\u2013" : v.toFixed(2));
   const max = Math.max(Math.abs(val1 || 0), Math.abs(val2 || 0)) || 1;
@@ -141,6 +144,10 @@ function StatBar({ label, val1, val2, higherIsBetter = true, format }) {
 
   const better1 = higherIsBetter ? (val1 || 0) > (val2 || 0) : (val1 || 0) < (val2 || 0);
   const better2 = higherIsBetter ? (val2 || 0) > (val1 || 0) : (val2 || 0) < (val1 || 0);
+  const tied = (val1 || 0) === (val2 || 0);
+
+  const bar1Color = tied ? NEUTRAL_COLOR : better1 ? BETTER_COLOR : NEUTRAL_COLOR;
+  const bar2Color = tied ? NEUTRAL_COLOR : better2 ? BETTER_COLOR : NEUTRAL_COLOR;
 
   return (
     <div style={{ marginBottom: 8 }}>
@@ -151,10 +158,10 @@ function StatBar({ label, val1, val2, higherIsBetter = true, format }) {
       </div>
       <div style={{ display: "flex", gap: 4, height: 6, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", background: "var(--table-row-even)", borderRadius: "3px 0 0 3px" }}>
-          <div style={{ width: `${Math.abs(pct1)}%`, background: P1_COLOR, borderRadius: "3px 0 0 3px", transition: "width 0.3s" }} />
+          <div style={{ width: `${Math.abs(pct1)}%`, background: bar1Color, borderRadius: "3px 0 0 3px", transition: "width 0.3s" }} />
         </div>
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start", background: "var(--table-row-even)", borderRadius: "0 3px 3px 0" }}>
-          <div style={{ width: `${Math.abs(pct2)}%`, background: P2_COLOR, borderRadius: "0 3px 3px 0", transition: "width 0.3s" }} />
+          <div style={{ width: `${Math.abs(pct2)}%`, background: bar2Color, borderRadius: "0 3px 3px 0", transition: "width 0.3s" }} />
         </div>
       </div>
     </div>
@@ -365,7 +372,12 @@ export default function Compare({ members }) {
             padding: "16px 20px", marginBottom: 20, borderRadius: 12,
             border: "1px solid var(--table-border)", background: "var(--table-row-even)",
           }}>
-            <h3 style={{ margin: "0 0 16px", fontSize: "1em", textTransform: "uppercase", letterSpacing: "0.05em" }}>Stat Comparison</h3>
+            <h3 style={{ margin: "0 0 4px", fontSize: "1em", textTransform: "uppercase", letterSpacing: "0.05em" }}>Stat Comparison</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14, fontSize: "0.75em", color: "var(--footer-color)" }}>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: BETTER_COLOR, marginRight: 4, verticalAlign: "middle" }} />Better value</span>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: P1_COLOR, marginRight: 4, verticalAlign: "middle" }} />Player 1</span>
+              <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: P2_COLOR, marginRight: 4, verticalAlign: "middle" }} />Player 2</span>
+            </div>
 
             <h4 style={{ margin: "12px 0 8px", fontSize: "0.85em", color: "var(--footer-color)", textTransform: "uppercase" }}>Core Stats</h4>
             <StatBar label="TR" val1={player1.tr} val2={player2.tr} format={(v) => v ? v.toFixed(2) : "\u2013"} />
