@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Bracket from "./Bracket";
 import Resources from "./Resources";
+import Compare from "./Compare";
 
 /* ---------------- LEADERBOARD ---------------- */
 
@@ -550,6 +551,12 @@ export default function App() {
               Resources
             </button>
           </Link>
+
+          <Link to="/compare" style={{ textDecoration: "none" }}>
+            <button style={tabStyle(location.pathname === "/compare")}>
+              Compare
+            </button>
+          </Link>
         </div>
 
         {/* DARK MODE TOGGLE (four.lol style SVG icon) */}
@@ -609,6 +616,7 @@ export default function App() {
 
         <Route path="/bracket" element={<Bracket />} />
         <Route path="/resources" element={<Resources />} />
+        <Route path="/compare" element={<Compare members={members} />} />
       </Routes>
     </div>
   );
