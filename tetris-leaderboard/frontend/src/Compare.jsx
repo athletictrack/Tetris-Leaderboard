@@ -186,10 +186,10 @@ function DiamondChart({ labels, datasets, maxVal = 1.5, size = 320, gridColor })
   );
 }
 
-/* ── Player colors (blue / pink like sheetBot) ── */
+/* ── Player colors (blue / orange) ── */
 
 const P1_COLOR = "#4ea3ff";
-const P2_COLOR = "#e86b9e";
+const P2_COLOR = "#f5a623";
 
 /* ── Stat comparison bar ── */
 

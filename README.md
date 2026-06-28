@@ -20,7 +20,7 @@ A real-time TETR.IO leaderboard for the UTS Tetris Elite club. The app polls eac
   - Playstyle diamond chart (Opener, Stride, Plonk, Inf DS)
   - Side-by-side stat comparison bars with green=better highlighting
   - Collapsible stat glossary explaining every metric
-  - Player 1 shown in blue, Player 2 in pink (sheetBot style)
+  - Player 1 shown in blue, Player 2 in orange
   - Only players with Tetra League games appear in the dropdown
 
 ## Architecture
@@ -35,8 +35,9 @@ tetris-leaderboard/
     src/
       App.jsx       Main app: leaderboard table, news box, dark mode, routing
       Compare.jsx   Head-to-head player comparison (radar, diamond, stat bars)
+      Home.jsx      Home landing page with site overview and page links
       Bracket.jsx   Tournament Bracket page (hidden until tournament time)
-      Resources.jsx Resources page (maintenance placeholder)
+      Resources.jsx TETR.IO modern Tetris resources (openers, spins, tools, etc.)
       index.css     Global styles, CSS custom properties for theming
       main.jsx      React entry point with BrowserRouter
 ```
@@ -45,10 +46,10 @@ tetris-leaderboard/
 
 | Route | Page | Description |
 |-------|------|-------------|
-| `/` | — | Redirects to `/rankings` |
+| `/` | Home | Landing page with site overview and links to each section |
 | `/rankings` | Rankings | Main leaderboard table with mode sorting, search, and news feed |
 | `/compare` | Compare | Head-to-head player comparison with charts and stat bars |
-| `/resources` | Resources | Community resources (maintenance placeholder) |
+| `/resources` | Resources | Curated TETR.IO modern Tetris resources (openers, stacking, spins, videos, QP guides, tools) |
 | `/bracket` | Bracket | Tournament bracket (hidden from nav until tournament time) |
 
 ## Backend
@@ -99,13 +100,13 @@ tetris-leaderboard/
 - **Column configurations** — `MODE_COLUMNS` maps each sort mode to its set of `<td>` generators, matching TETR.IO's official column layout
 - **Username links** — Each username links to the player's mode-specific TETR.IO profile page (e.g., `/league`, `/40l`, `/blitz`)
 - **Dark mode** — CSS custom properties toggle between dark and light themes; defaults to dark
-- **Routing** — `/` redirects to `/rankings`; Bracket tab hidden from nav until tournament time
+- **Routing** — `/` serves the Home landing page; Bracket tab hidden from nav until tournament time
 
 ### `Compare.jsx`
 
 - **Spider web radar chart** — 10-axis radar displaying APM, PPS, VS, APP, DS/Second, DS/Piece, APP+DS/Piece, VS/APM, Cheese Index, and Garbage Efficiency (normalized to a 0-1.5 scale)
 - **Playstyle diamond chart** — 4-axis diamond showing Opener, Stride, Plonk, Inf DS playstyle scores
-- **Player colors** — Player 1 in blue (#4ea3ff), Player 2 in pink (#e86b9e), consistent across all UI elements (like sheetBot)
+- **Player colors** — Player 1 in blue (#4ea3ff), Player 2 in orange (#f5a623), consistent across all UI elements
 - **Dark mode grids** — Chart grid lines are white in dark mode, default in light mode
 - **Stat comparison bars** — Side-by-side bars with green highlighting for the better value
 - **Win probability** — Glicko-based and stat-estimated win probability bars
@@ -129,7 +130,7 @@ tetris-leaderboard/
 3. **Win probability** is calculated via the Glicko-2 expected-score formula
 4. **Spider web** normalizes 10 stats (APM, PPS, VS, APP, DS/S, DS/P, APP+DSP, VS/APM, Cheese Index, Garbage Efficiency) to a 0-1.5 scale for visual comparison on a radar chart
 5. **Diamond chart** plots the four playstyle scores (Opener, Stride, Plonk, Inf DS) on a rotated square
-6. **Stat bars** show each stat side-by-side; green = better, with Player 1 (blue) on the left and Player 2 (pink) on the right
+6. **Stat bars** show each stat side-by-side; green = better, with Player 1 (blue) on the left and Player 2 (orange) on the right
 7. **Stat glossary** (collapsible) explains every metric
 
 ### How Derived Stats Are Calculated
