@@ -20,7 +20,7 @@ A real-time TETR.IO leaderboard for the UTS Tetris Elite club. The app polls eac
   - Playstyle diamond chart (Opener, Stride, Plonk, Inf DS)
   - Side-by-side stat comparison bars with green=better highlighting
   - Collapsible stat glossary explaining every metric
-  - Player 1 shown in blue, Player 2 in pink (sheetBot style)
+  - Player 1 shown in blue, Player 2 in orange
   - Only players with Tetra League games appear in the dropdown
 
 ## Architecture
@@ -106,7 +106,7 @@ tetris-leaderboard/
 
 - **Spider web radar chart** — 10-axis radar displaying APM, PPS, VS, APP, DS/Second, DS/Piece, APP+DS/Piece, VS/APM, Cheese Index, and Garbage Efficiency (normalized to a 0-1.5 scale)
 - **Playstyle diamond chart** — 4-axis diamond showing Opener, Stride, Plonk, Inf DS playstyle scores
-- **Player colors** — Player 1 in blue (#4ea3ff), Player 2 in pink (#e86b9e), consistent across all UI elements (like sheetBot)
+- **Player colors** — Player 1 in blue (#4ea3ff), Player 2 in orange (#f5a623), consistent across all UI elements
 - **Dark mode grids** — Chart grid lines are white in dark mode, default in light mode
 - **Stat comparison bars** — Side-by-side bars with green highlighting for the better value
 - **Win probability** — Glicko-based and stat-estimated win probability bars
@@ -130,7 +130,7 @@ tetris-leaderboard/
 3. **Win probability** is calculated via the Glicko-2 expected-score formula
 4. **Spider web** normalizes 10 stats (APM, PPS, VS, APP, DS/S, DS/P, APP+DSP, VS/APM, Cheese Index, Garbage Efficiency) to a 0-1.5 scale for visual comparison on a radar chart
 5. **Diamond chart** plots the four playstyle scores (Opener, Stride, Plonk, Inf DS) on a rotated square
-6. **Stat bars** show each stat side-by-side; green = better, with Player 1 (blue) on the left and Player 2 (pink) on the right
+6. **Stat bars** show each stat side-by-side; green = better, with Player 1 (blue) on the left and Player 2 (orange) on the right
 7. **Stat glossary** (collapsible) explains every metric
 
 ### How Derived Stats Are Calculated

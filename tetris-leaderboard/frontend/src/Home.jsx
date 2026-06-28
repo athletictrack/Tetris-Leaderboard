@@ -31,21 +31,9 @@ const pages = [
 export default function Home() {
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={{ textAlign: "center", marginBottom: 8 }}>
+      <h1 style={{ textAlign: "center", marginBottom: 24 }}>
         UTS Tetris Elite
       </h1>
-      <p
-        style={{
-          textAlign: "center",
-          color: "var(--footer-color)",
-          marginBottom: 32,
-          lineHeight: 1.6,
-        }}
-      >
-        A real-time TETR.IO leaderboard for UTS Tetris Elite. Track
-        live rankings across multiple game modes, compare players head-to-head,
-        and explore modern Tetris resources — all in one place.
-      </p>
 
       <h2 style={{ marginBottom: 12 }}>Pages</h2>
       {pages.map((p) => (
