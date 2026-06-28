@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <h1 style={{ textAlign: "center", fontSize: "2.2em", letterSpacing: "-0.02em", marginBottom: 24 }}>
-        UTS Tetris Elite
+        UTS Tetris Elite Home Page
       </h1>
 
       <h2 style={{ marginBottom: 12 }}>Pages</h2>
